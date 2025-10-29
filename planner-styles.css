@@ -200,6 +200,11 @@ body {
     font-weight: 500;
 }
 
+body.dark-mode .current-date {
+    background: rgba(74, 144, 226, 0.2);
+    color: var(--text-primary);
+}
+
 /* Navigation Tabs */
 .tab-navigation {
     max-width: 1400px;
@@ -767,6 +772,37 @@ body {
 .status-indicator.connected {
     background: var(--success);
     box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+/* Confirmation Modal Specific Styles */
+.confirm-modal-content {
+    max-width: 450px;
+}
+
+.confirm-modal-content .modal-header {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(245, 158, 11, 0.1));
+    border-radius: var(--border-radius-sm);
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.confirm-modal-content .modal-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--danger);
+}
+
+.confirm-modal-content .modal-title i {
+    font-size: 1.3rem;
+}
+
+.confirm-message {
+    font-size: 1.05rem;
+    color: var(--text-primary);
+    line-height: 1.6;
+    text-align: center;
+    padding: 10px 0;
 }
 
 /* Notification Toast */
