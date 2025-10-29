@@ -1,243 +1,397 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Focus Flow</title>
-  <link rel="stylesheet" href="styles.css"> 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Planner - Stay Organized & Meet Your Deadlines</title>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="planner-styles.css">
 </head>
 <body>
-  <!-- Header -->
-  <header>
-    <div class="logo">
-      <i class="fas fa-brain"></i>
-      <span>Focus Flow</span>
-    </div>
-    <div class="controls">
-      <button id="stats-btn" class="btn-icon tooltip">
-        <i class="fas fa-chart-bar"></i>
-        <span class="tooltiptext">Statistics</span>
-      </button>
-      <button id="settings-btn" class="btn-icon tooltip">
-        <i class="fas fa-cog"></i>
-        <span class="tooltiptext">Settings</span>
-      </button>
-      <button id="theme-toggle" class="btn-icon tooltip">
-        <i class="fas fa-moon"></i>
-        <span class="tooltiptext">Toggle Theme</span>
-      </button>
-    </div>
-  </header>
+    <!-- Header with Bible Verse -->
+    <header class="app-header">
+        <div class="bible-verse">
+            <div class="verse-text">
+                "Commit to the LORD whatever you do, and he will establish your plans."
+            </div>
+            <div class="verse-reference">
+                Proverbs 16:3 (NIV)
+            </div>
+        </div>
 
-  <!-- Main Content -->
-  <main>
-    <!-- Tasks Section -->
-    <section class="card">
-      <h2 class="card-title">
-        <i class="fas fa-tasks"></i>
-        My Tasks
-      </h2>
-      
-      <div class="input-group">
-        <input type="text" id="task-input" class="input-field" placeholder="What do you need to do?">
-        <select id="task-category" class="input-field">
-          <option value="work">💼 Work</option>
-          <option value="personal">👤 Personal</option>
-          <option value="health">💪 Health</option>
-          <option value="study">📚 Study</option>
-          <option value="other">🔄 Other</option>
-        </select>
-        <select id="task-priority" class="input-field">
-          <option value="low">🟢 Low</option>
-          <option value="medium">🟡 Medium</option>
-          <option value="high">🔴 High</option>
-        </select>
-        <button id="add-task-btn" class="btn">
-          <i class="fas fa-plus"></i>
-          Add
+        <div class="app-title-section">
+            <div class="app-title">
+                <i class="fas fa-calendar-check"></i>
+                <h1>Life Planner</h1>
+            </div>
+
+            <div class="header-stats">
+                <div class="stat-item" title="Active Tasks">
+                    <i class="fas fa-tasks"></i>
+                    <span id="activeTasksCount">0</span>
+                </div>
+                <div class="stat-item" title="Upcoming Events">
+                    <i class="fas fa-calendar"></i>
+                    <span id="upcomingEventsCount">0</span>
+                </div>
+                <div class="stat-item urgent" title="Urgent Deadlines">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="urgentDeadlinesCount">0</span>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <span class="current-date" id="currentDate"></span>
+                <button class="icon-btn" id="themeToggle" title="Toggle Dark Mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-navigation">
+        <button class="tab-btn active" data-tab="work">
+            <i class="fas fa-briefcase"></i> Work Tasks
         </button>
-      </div>
-      
-      <div class="task-filters">
-        <span class="category-tag active" data-filter="all">All</span>
-        <span class="category-tag" data-filter="work">Work</span>
-        <span class="category-tag" data-filter="personal">Personal</span>
-        <span class="category-tag" data-filter="health">Health</span>
-        <span class="category-tag" data-filter="study">Study</span>
-        <span class="category-tag" data-filter="other">Other</span>
-      </div>
-      
-      <ul id="task-list" class="task-list">
-        <!-- Tasks will be added here dynamically -->
-      </ul>
-      
-      <div id="empty-tasks" class="empty-state">
-        <i class="fas fa-check-circle"></i>
-        <h3>All caught up!</h3>
-        <p>You have no tasks to do. Add a new task to get started.</p>
-      </div>
-    </section>
-    
-    <!-- Timer Section -->
-    <section class="card">
-      <h2 class="card-title">
-        <i class="fas fa-clock"></i>
-        Focus Timer
-      </h2>
-      
-      <div class="timer-container">
-        <div class="timer-modes">
-          <div class="timer-mode active" data-mode="pomodoro">Pomodoro</div>
-          <div class="timer-mode" data-mode="short-break">Short Break</div>
-          <div class="timer-mode" data-mode="long-break">Long Break</div>
-        </div>
-        
-        <div class="timer-display" id="timer-display">25:00</div>
-        
-        <div class="timer-controls">
-          <button id="timer-start" class="timer-btn">
-            <i class="fas fa-play"></i>
-          </button>
-          <button id="timer-pause" class="timer-btn pause" disabled>
-            <i class="fas fa-pause"></i>
-          </button>
-          <button id="timer-reset" class="timer-btn reset">
-            <i class="fas fa-redo"></i>
-          </button>
-        </div>
-      </div>
-    </section>
-    
-    <!-- Stats Section (Hidden by default, shown when clicking stats button) -->
-    <section id="stats-section" class="card" style="display: none;">
-      <h2 class="card-title">
-        <i class="fas fa-chart-bar"></i>
-        Productivity Stats
-      </h2>
-      
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value" id="tasks-completed">0</div>
-          <div class="stat-label">Tasks Completed</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="focus-sessions">0</div>
-          <div class="stat-label">Focus Sessions</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="focus-minutes">0</div>
-          <div class="stat-label">Minutes Focused</div>
-        </div>
-      </div>
-      
-      <h3 style="margin-top: 24px; font-size: 1rem;">Completion Rate</h3>
-      <div class="progress-bar">
-        <div class="progress-value" id="completion-progress" style="width: 0%;"></div>
-      </div>
-    </section>
-  </main>
-  
-  <!-- Settings Modal -->
-  <div id="settings-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">Settings</h2>
-        <button class="modal-close">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="settings-grid">
-          <div class="setting-item">
-            <label>Dark Mode</label>
-            <label class="switch">
-              <input type="checkbox" id="dark-mode-toggle">
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="setting-item">
-            <label>Sound Notifications</label>
-            <label class="switch">
-              <input type="checkbox" id="sound-toggle" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="setting-item">
-            <label>Desktop Notifications</label>
-            <label class="switch">
-              <input type="checkbox" id="notification-toggle" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="setting-item">
-            <label>Auto Start Breaks</label>
-            <label class="switch">
-              <input type="checkbox" id="auto-break-toggle">
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-        
-        <h3 style="margin-top: 24px; font-size: 1rem;">Timer Duration (minutes)</h3>
-        <div class="settings-grid">
-          <div class="setting-item">
-            <label>Pomodoro</label>
-            <input type="number" id="pomodoro-duration" class="input-field" min="1" max="60" value="25" style="width: 60px;">
-          </div>
-          <div class="setting-item">
-            <label>Short Break</label>
-            <input type="number" id="short-break-duration" class="input-field" min="1" max="30" value="5" style="width: 60px;">
-          </div>
-          <div class="setting-item">
-            <label>Long Break</label>
-            <input type="number" id="long-break-duration" class="input-field" min="1" max="60" value="15" style="width: 60px;">
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button id="save-settings" class="btn">Save Settings</button>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Edit Task Modal -->
-  <div id="edit-task-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">Edit Task</h2>
-        <button class="modal-close">&times;</button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="edit-task-id">
-        <div class="input-group" style="flex-direction: column;">
-          <input type="text" id="edit-task-text" class="input-field" placeholder="Task description">
-          <select id="edit-task-category" class="input-field">
-            <option value="work">💼 Work</option>
-            <option value="personal">👤 Personal</option>
-            <option value="health">💪 Health</option>
-            <option value="study">📚 Study</option>
-            <option value="other">🔄 Other</option>
-          </select>
-          <select id="edit-task-priority" class="input-field">
-            <option value="low">🟢 Low</option>
-            <option value="medium">🟡 Medium</option>
-            <option value="high">🔴 High</option>
-          </select>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button id="update-task-btn" class="btn">Update Task</button>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Notification -->
-  <div id="notification" class="notification">
-    <span id="notification-message"></span>
-  </div>
+        <button class="tab-btn" data-tab="personal">
+            <i class="fas fa-heart"></i> Personal Tasks
+        </button>
+        <button class="tab-btn" data-tab="schedule">
+            <i class="fas fa-calendar-alt"></i> Schedule
+        </button>
+        <button class="tab-btn" data-tab="weekly">
+            <i class="fas fa-sync-alt"></i> Weekly Routines
+        </button>
+        <button class="tab-btn" data-tab="deadlines">
+            <i class="fas fa-flag-checkered"></i> Deadlines
+        </button>
+    </nav>
 
-  <!-- Audio -->
-  <audio id="task-complete-sound" src="https://cdnjs.cloudflare.com/ajax/libs/sound-effects/1.0.0/complete.mp3"></audio>
-  <audio id="timer-end-sound" src="https://cdnjs.cloudflare.com/ajax/libs/sound-effects/1.0.0/alert.mp3"></audio>
-  <script src="scripts.js"></script> <!-- Added JavaScript -->
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Work Tasks Tab -->
+        <div class="tab-content active" id="workTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-briefcase"></i> Work Tasks
+                    </h2>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Task Title *</label>
+                    <input type="text" id="workTaskTitle" class="form-input"
+                           placeholder="Enter work task title...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description (Optional)</label>
+                    <textarea id="workTaskDesc" class="form-textarea"
+                              placeholder="Add more details about this task..."></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Deadline (Optional)</label>
+                        <input type="date" id="workTaskDeadline" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Priority</label>
+                        <select id="workTaskPriority" class="form-select">
+                            <option value="low">Low Priority</option>
+                            <option value="medium" selected>Medium Priority</option>
+                            <option value="high">High Priority</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="addWorkTaskBtn">
+                    <i class="fas fa-plus"></i> Add Work Task
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-list"></i> Your Work Tasks
+                    </h2>
+                </div>
+                <div id="workTasksList" class="items-list"></div>
+            </div>
+        </div>
+
+        <!-- Personal Tasks Tab -->
+        <div class="tab-content" id="personalTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-heart"></i> Personal Tasks
+                    </h2>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Task Title *</label>
+                    <input type="text" id="personalTaskTitle" class="form-input"
+                           placeholder="Enter personal task title...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description (Optional)</label>
+                    <textarea id="personalTaskDesc" class="form-textarea"
+                              placeholder="Add more details about this task..."></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Deadline (Optional)</label>
+                        <input type="date" id="personalTaskDeadline" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Priority</label>
+                        <select id="personalTaskPriority" class="form-select">
+                            <option value="low">Low Priority</option>
+                            <option value="medium" selected>Medium Priority</option>
+                            <option value="high">High Priority</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="addPersonalTaskBtn">
+                    <i class="fas fa-plus"></i> Add Personal Task
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-list"></i> Your Personal Tasks
+                    </h2>
+                </div>
+                <div id="personalTasksList" class="items-list"></div>
+            </div>
+        </div>
+
+        <!-- Schedule Tab -->
+        <div class="tab-content" id="scheduleTab">
+            <!-- Custom Calendar -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-calendar-alt"></i> Calendar
+                    </h2>
+                </div>
+
+                <div class="calendar-wrapper">
+                    <div class="calendar-header">
+                        <button class="calendar-nav-btn" id="prevMonthBtn" title="Previous Month">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div style="display: flex; align-items: center; gap: 12px; flex: 1; justify-content: center;">
+                            <h3 class="calendar-month-year" id="calendarMonthYear">January 2024</h3>
+                            <button class="btn btn-secondary btn-sm" id="todayBtn" title="Go to Today">
+                                Today
+                            </button>
+                        </div>
+                        <button class="calendar-nav-btn" id="nextMonthBtn" title="Next Month">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div class="calendar-legend">
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: var(--primary-blue);"></div>
+                            <span>Events</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: var(--danger);"></div>
+                            <span>Deadlines</span>
+                        </div>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Calendar will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Add Event -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-plus-circle"></i> Add Event
+                    </h2>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Event Title *</label>
+                    <input type="text" id="scheduleTitle" class="form-input"
+                           placeholder="e.g., Team Meeting, Doctor Appointment...">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Date *</label>
+                        <input type="date" id="scheduleDate" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Time (Optional)</label>
+                        <input type="time" id="scheduleTime" class="form-input">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description (Optional)</label>
+                    <textarea id="scheduleDesc" class="form-textarea" rows="2"
+                              placeholder="Add location, notes, or other details..."></textarea>
+                </div>
+
+                <button class="btn btn-primary" id="addScheduleBtn">
+                    <i class="fas fa-plus"></i> Add Event
+                </button>
+            </div>
+
+            <!-- Upcoming Schedule -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-list"></i> Upcoming Events
+                    </h2>
+                </div>
+                <div id="scheduleList" class="items-list"></div>
+            </div>
+        </div>
+
+        <!-- Weekly Routines Tab -->
+        <div class="tab-content" id="weeklyTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-sync-alt"></i> Weekly Recurring Tasks
+                    </h2>
+                </div>
+
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Set up tasks that repeat every week on specific days. Perfect for regular commitments!
+                </p>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Day of Week *</label>
+                        <select id="routineDay" class="form-select">
+                            <option value="">Select a day...</option>
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                            <option value="Saturday">Saturday</option>
+                            <option value="Sunday">Sunday</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Time (Optional)</label>
+                        <input type="time" id="routineTime" class="form-input">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Routine Task *</label>
+                    <input type="text" id="routineTitle" class="form-input"
+                           placeholder="e.g., Gym Session, Team Standup, Grocery Shopping...">
+                </div>
+
+                <button class="btn btn-primary" id="addRoutineBtn">
+                    <i class="fas fa-plus"></i> Add Weekly Routine
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-calendar-week"></i> Your Weekly Routines
+                    </h2>
+                </div>
+                <div id="weeklyRoutinesList"></div>
+            </div>
+        </div>
+
+        <!-- Deadlines Tab -->
+        <div class="tab-content" id="deadlinesTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-flag-checkered"></i> All Deadlines
+                    </h2>
+                </div>
+
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Track all your deadlines from work and personal tasks in one place. Stay on top of what's urgent!
+                </p>
+
+                <div class="deadline-tracker" id="deadlinesList"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Edit Task Modal -->
+    <div class="modal" id="editTaskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Task</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="editTaskId">
+                <input type="hidden" id="editTaskType">
+
+                <div class="form-group">
+                    <label class="form-label">Task Title</label>
+                    <input type="text" id="editTaskTitle" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea id="editTaskDesc" class="form-textarea"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Deadline</label>
+                        <input type="date" id="editTaskDeadline" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Priority</label>
+                        <select id="editTaskPriority" class="form-select">
+                            <option value="low">Low Priority</option>
+                            <option value="medium">Medium Priority</option>
+                            <option value="high">High Priority</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-close">Cancel</button>
+                <button class="btn btn-primary" id="saveTaskBtn">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span class="notification-message"></span>
+    </div>
+
+    <!-- Application Script -->
+    <script src="planner-app.js"></script>
 </body>
 </html>
