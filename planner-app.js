@@ -22,6 +22,9 @@ class LifePlanner {
         this.currentTab = 'work';
         this.editingItem = null;
 
+        // Calendar state
+        this.currentCalendarDate = new Date();
+
         // Initialize
         this.init();
     }
@@ -73,8 +76,10 @@ class LifePlanner {
         // Theme toggle
         document.getElementById('themeToggle')?.addEventListener('click', () => this.toggleTheme());
 
-        // Google Calendar connect
-        document.getElementById('connectCalendarBtn')?.addEventListener('click', () => this.showGoogleCalendarInfo());
+        // Calendar navigation
+        document.getElementById('prevMonthBtn')?.addEventListener('click', () => this.changeMonth(-1));
+        document.getElementById('nextMonthBtn')?.addEventListener('click', () => this.changeMonth(1));
+        document.getElementById('todayBtn')?.addEventListener('click', () => this.goToToday());
     }
 
     // Tab Management
@@ -361,6 +366,7 @@ class LifePlanner {
         this.scheduleItems.push(item);
         this.saveData();
         this.renderSchedule();
+        this.renderCalendar();
 
         // Clear inputs
         if (titleInput) titleInput.value = '';
@@ -424,6 +430,7 @@ class LifePlanner {
         this.scheduleItems = this.scheduleItems.filter(item => item.id !== id);
         this.saveData();
         this.renderSchedule();
+        this.renderCalendar();
         this.showNotification('Schedule item deleted');
     }
 
@@ -593,30 +600,172 @@ class LifePlanner {
         }).join('');
     }
 
-    // Google Calendar Integration
-    showGoogleCalendarInfo() {
-        alert(`Google Calendar Integration
+    // Calendar Methods
+    changeMonth(delta) {
+        this.currentCalendarDate.setMonth(this.currentCalendarDate.getMonth() + delta);
+        this.renderCalendar();
+    }
 
-To connect your Google Calendar:
+    goToToday() {
+        this.currentCalendarDate = new Date();
+        this.renderCalendar();
+        this.showNotification('Jumped to current month');
+    }
 
-1. You'll need to set up Google Calendar API credentials
-2. Visit: https://console.cloud.google.com/
-3. Create a new project or select existing
-4. Enable Google Calendar API
-5. Create OAuth 2.0 credentials
-6. Add the client ID to this application
+    renderCalendar() {
+        const year = this.currentCalendarDate.getFullYear();
+        const month = this.currentCalendarDate.getMonth();
 
-This is a placeholder for Google Calendar integration. The full implementation requires:
-- OAuth 2.0 authentication
-- Google Calendar API access
-- Proper security implementation
+        // Update header
+        const monthYearEl = document.getElementById('calendarMonthYear');
+        if (monthYearEl) {
+            monthYearEl.textContent = new Date(year, month).toLocaleDateString('en-US', {
+                month: 'long',
+                year: 'numeric'
+            });
+        }
 
-For now, you can manually sync your tasks with Google Calendar by:
-- Copying task deadlines to your calendar
-- Setting calendar reminders
-- Using calendar events as reference
+        const grid = document.getElementById('calendarGrid');
+        if (!grid) return;
 
-Would you like help with the full implementation?`);
+        // Clear grid
+        grid.innerHTML = '';
+
+        // Add day headers
+        const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        dayHeaders.forEach(day => {
+            const header = document.createElement('div');
+            header.className = 'calendar-day-header';
+            header.textContent = day;
+            grid.appendChild(header);
+        });
+
+        // Get first day of month and number of days
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+        // Get today for highlighting
+        const today = new Date();
+        const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+
+        // Add previous month's trailing days
+        for (let i = firstDay - 1; i >= 0; i--) {
+            const day = daysInPrevMonth - i;
+            const dayEl = this.createCalendarDay(day, month - 1, year, true);
+            grid.appendChild(dayEl);
+        }
+
+        // Add current month's days
+        for (let day = 1; day <= daysInMonth; day++) {
+            const isToday = isCurrentMonth && day === today.getDate();
+            const dayEl = this.createCalendarDay(day, month, year, false, isToday);
+            grid.appendChild(dayEl);
+        }
+
+        // Add next month's leading days
+        const totalCells = grid.children.length - 7; // Subtract headers
+        const remainingCells = 42 - totalCells; // 6 rows * 7 days
+        for (let day = 1; day <= remainingCells; day++) {
+            const dayEl = this.createCalendarDay(day, month + 1, year, true);
+            grid.appendChild(dayEl);
+        }
+    }
+
+    createCalendarDay(day, month, year, isOtherMonth, isToday = false) {
+        const dayEl = document.createElement('div');
+        dayEl.className = 'calendar-day';
+
+        if (isOtherMonth) {
+            dayEl.classList.add('other-month');
+        }
+        if (isToday) {
+            dayEl.classList.add('today');
+        }
+
+        // Get events and deadlines for this day
+        const dateStr = this.formatDateForComparison(year, month, day);
+        const events = this.getEventsForDate(dateStr);
+        const deadlines = this.getDeadlinesForDate(dateStr);
+
+        if (events.length > 0) {
+            dayEl.classList.add('has-event');
+        }
+        if (deadlines.length > 0) {
+            dayEl.classList.add('has-deadline');
+        }
+
+        // Day number
+        const numberEl = document.createElement('div');
+        numberEl.className = 'calendar-day-number';
+        numberEl.textContent = day;
+        dayEl.appendChild(numberEl);
+
+        // Event indicators
+        if (!isOtherMonth && (events.length > 0 || deadlines.length > 0)) {
+            const eventsContainer = document.createElement('div');
+            eventsContainer.className = 'calendar-day-events';
+
+            // Add event dots
+            for (let i = 0; i < Math.min(events.length, 2); i++) {
+                const dot = document.createElement('div');
+                dot.className = 'calendar-event-dot';
+                eventsContainer.appendChild(dot);
+            }
+
+            // Add deadline dots
+            for (let i = 0; i < Math.min(deadlines.length, 2); i++) {
+                const dot = document.createElement('div');
+                dot.className = 'calendar-deadline-dot';
+                eventsContainer.appendChild(dot);
+            }
+
+            dayEl.appendChild(eventsContainer);
+
+            // Count indicator
+            const total = events.length + deadlines.length;
+            if (total > 2) {
+                const countEl = document.createElement('div');
+                countEl.className = 'calendar-day-count';
+                countEl.textContent = `+${total - 2}`;
+                dayEl.appendChild(countEl);
+            }
+        }
+
+        // Click handler to select date
+        dayEl.addEventListener('click', () => {
+            const selectedDate = this.formatDateForInput(year, month, day);
+            const dateInput = document.getElementById('scheduleDate');
+            if (dateInput) {
+                dateInput.value = selectedDate;
+                document.getElementById('scheduleTitle')?.focus();
+            }
+        });
+
+        return dayEl;
+    }
+
+    formatDateForComparison(year, month, day) {
+        const date = new Date(year, month, day);
+        return date.toISOString().split('T')[0];
+    }
+
+    formatDateForInput(year, month, day) {
+        const y = year;
+        const m = String(month + 1).padStart(2, '0');
+        const d = String(day).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    getEventsForDate(dateStr) {
+        return this.scheduleItems.filter(item => item.date === dateStr);
+    }
+
+    getDeadlinesForDate(dateStr) {
+        return [
+            ...this.workTasks.filter(t => t.deadline === dateStr && !t.completed),
+            ...this.personalTasks.filter(t => t.deadline === dateStr && !t.completed)
+        ];
     }
 
     // UI Updates
@@ -625,7 +774,9 @@ Would you like help with the full implementation?`);
         this.renderPersonalTasks();
         this.renderSchedule();
         this.renderWeeklyRoutines();
+        this.renderCalendar();
         this.checkDeadlines();
+        this.updateHeaderStats();
     }
 
     updateDate() {
@@ -639,6 +790,41 @@ Would you like help with the full implementation?`);
                 day: 'numeric'
             });
         }
+    }
+
+    updateHeaderStats() {
+        // Count active tasks
+        const activeTasks = this.workTasks.filter(t => !t.completed).length +
+                          this.personalTasks.filter(t => !t.completed).length;
+
+        // Count upcoming events (future events)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const upcomingEvents = this.scheduleItems.filter(item => {
+            const eventDate = new Date(item.date);
+            return eventDate >= today;
+        }).length;
+
+        // Count urgent deadlines (within 3 days or overdue)
+        const threeDaysFromNow = new Date(today);
+        threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+
+        const urgentDeadlines = [
+            ...this.workTasks.filter(t => t.deadline && !t.completed),
+            ...this.personalTasks.filter(t => t.deadline && !t.completed)
+        ].filter(task => {
+            const deadline = new Date(task.deadline);
+            return deadline <= threeDaysFromNow;
+        }).length;
+
+        // Update DOM
+        const activeTasksEl = document.getElementById('activeTasksCount');
+        const upcomingEventsEl = document.getElementById('upcomingEventsCount');
+        const urgentDeadlinesEl = document.getElementById('urgentDeadlinesCount');
+
+        if (activeTasksEl) activeTasksEl.textContent = activeTasks;
+        if (upcomingEventsEl) upcomingEventsEl.textContent = upcomingEvents;
+        if (urgentDeadlinesEl) urgentDeadlinesEl.textContent = urgentDeadlines;
     }
 
     // Theme Management
