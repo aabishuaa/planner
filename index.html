@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Life Planner - Stay Organized & Meet Your Deadlines</title>
+    <title>Abishua's Planner - Stay Organized & Meet Your Deadlines</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -34,7 +34,7 @@
         <div class="app-title-section">
             <div class="app-title">
                 <i class="fas fa-calendar-check"></i>
-                <h1>Life Planner</h1>
+                <h1>Abishua's Planner</h1>
             </div>
 
             <div class="header-stats">
@@ -69,6 +69,9 @@
         <button class="tab-btn" data-tab="personal">
             <i class="fas fa-heart"></i> Personal Tasks
         </button>
+        <button class="tab-btn" data-tab="daily">
+            <i class="fas fa-check-circle"></i> Daily Tasks
+        </button>
         <button class="tab-btn" data-tab="schedule">
             <i class="fas fa-calendar-alt"></i> Schedule
         </button>
@@ -77,6 +80,12 @@
         </button>
         <button class="tab-btn" data-tab="deadlines">
             <i class="fas fa-flag-checkered"></i> Deadlines
+        </button>
+        <button class="tab-btn" data-tab="goals">
+            <i class="fas fa-trophy"></i> Goals
+        </button>
+        <button class="tab-btn" data-tab="notes">
+            <i class="fas fa-sticky-note"></i> Notes
         </button>
     </nav>
 
@@ -182,6 +191,45 @@
                     </h2>
                 </div>
                 <div id="personalTasksList" class="items-list"></div>
+            </div>
+        </div>
+
+        <!-- Daily Tasks Tab -->
+        <div class="tab-content" id="dailyTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-check-circle"></i> Today's Tasks
+                    </h2>
+                    <span id="dailyTaskDate" style="color: var(--text-secondary); font-size: 1rem;"></span>
+                </div>
+
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Quick to-do list for today. Check off tasks as you complete them!
+                </p>
+
+                <div class="form-group">
+                    <label class="form-label">Add Task *</label>
+                    <div style="display: flex; gap: 12px;">
+                        <input type="text" id="dailyTaskInput" class="form-input"
+                               placeholder="What do you need to get done today?">
+                        <button class="btn btn-primary" id="addDailyTaskBtn">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-list-check"></i> Today's To-Do List
+                    </h2>
+                    <button class="btn btn-sm btn-secondary" id="clearCompletedBtn">
+                        <i class="fas fa-broom"></i> Clear Completed
+                    </button>
+                </div>
+                <div id="dailyTasksList" class="items-list"></div>
             </div>
         </div>
 
@@ -341,6 +389,122 @@
                 </p>
 
                 <div class="deadline-tracker" id="deadlinesList"></div>
+            </div>
+        </div>
+
+        <!-- Goals Tab -->
+        <div class="tab-content" id="goalsTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-trophy"></i> My Goals
+                    </h2>
+                </div>
+
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Set and track your short-term, medium-term, and long-term goals!
+                </p>
+
+                <div class="form-group">
+                    <label class="form-label">Goal Title *</label>
+                    <input type="text" id="goalTitle" class="form-input"
+                           placeholder="What do you want to achieve?">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description (Optional)</label>
+                    <textarea id="goalDesc" class="form-textarea" rows="2"
+                              placeholder="Add more details about your goal..."></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Goal Type *</label>
+                        <select id="goalType" class="form-select">
+                            <option value="short">Short-term (Weeks to Months)</option>
+                            <option value="medium">Medium-term (Months to Year)</option>
+                            <option value="long">Long-term (Year+)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Target Date (Optional)</label>
+                        <input type="date" id="goalTarget" class="form-input">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="addGoalBtn">
+                    <i class="fas fa-plus"></i> Add Goal
+                </button>
+            </div>
+
+            <!-- Short-term Goals -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-bolt"></i> Short-term Goals
+                    </h2>
+                </div>
+                <div id="shortGoalsList" class="items-list"></div>
+            </div>
+
+            <!-- Medium-term Goals -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-chart-line"></i> Medium-term Goals
+                    </h2>
+                </div>
+                <div id="mediumGoalsList" class="items-list"></div>
+            </div>
+
+            <!-- Long-term Goals -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-mountain"></i> Long-term Goals
+                    </h2>
+                </div>
+                <div id="longGoalsList" class="items-list"></div>
+            </div>
+        </div>
+
+        <!-- Notes Tab -->
+        <div class="tab-content" id="notesTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-sticky-note"></i> Quick Notes
+                    </h2>
+                </div>
+
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Jot down your thoughts, ideas, or reminders!
+                </p>
+
+                <div class="form-group">
+                    <label class="form-label">Note Title *</label>
+                    <input type="text" id="noteTitle" class="form-input"
+                           placeholder="Give your note a title...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Note Content *</label>
+                    <textarea id="noteContent" class="form-textarea" rows="6"
+                              placeholder="Write your note here..."></textarea>
+                </div>
+
+                <button class="btn btn-primary" id="addNoteBtn">
+                    <i class="fas fa-plus"></i> Add Note
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-book"></i> Your Notes
+                    </h2>
+                </div>
+                <div id="notesList" class="notes-grid"></div>
             </div>
         </div>
 

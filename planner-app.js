@@ -1,11 +1,12 @@
-// Life Planner Application
+// Abishua's Planner Application
 // Organized planner for managing work, personal tasks, schedules, and deadlines
 
-class LifePlanner {
+class AbishuasPlanner {
     constructor() {
         // Data storage
         this.workTasks = [];
         this.personalTasks = [];
+        this.dailyTasks = [];
         this.scheduleItems = [];
         this.weeklyRoutines = {
             Monday: [],
@@ -17,6 +18,8 @@ class LifePlanner {
             Sunday: []
         };
         this.deadlines = [];
+        this.goals = [];
+        this.notes = [];
 
         // UI state
         this.currentTab = 'work';
@@ -56,11 +59,24 @@ class LifePlanner {
             if (e.key === 'Enter' && !e.shiftKey) this.addPersonalTask();
         });
 
+        // Daily Tasks
+        document.getElementById('addDailyTaskBtn')?.addEventListener('click', () => this.addDailyTask());
+        document.getElementById('dailyTaskInput')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) this.addDailyTask();
+        });
+        document.getElementById('clearCompletedBtn')?.addEventListener('click', () => this.clearCompletedDailyTasks());
+
         // Schedule
         document.getElementById('addScheduleBtn')?.addEventListener('click', () => this.addScheduleItem());
 
         // Weekly Routines
         document.getElementById('addRoutineBtn')?.addEventListener('click', () => this.addWeeklyRoutine());
+
+        // Goals
+        document.getElementById('addGoalBtn')?.addEventListener('click', () => this.addGoal());
+
+        // Notes
+        document.getElementById('addNoteBtn')?.addEventListener('click', () => this.addNote());
 
         // Modal controls
         document.querySelectorAll('.modal-close').forEach(btn => {
@@ -229,10 +245,125 @@ class LifePlanner {
         this.attachTaskListeners('personal');
     }
 
+    // Daily Tasks Management
+    addDailyTask() {
+        const input = document.getElementById('dailyTaskInput');
+        const title = input?.value.trim();
+
+        if (!title) {
+            this.showNotification('Please enter a task', 'warning');
+            return;
+        }
+
+        const task = {
+            id: Date.now(),
+            title,
+            completed: false,
+            createdAt: new Date().toISOString(),
+            date: this.formatLocalDate(new Date())
+        };
+
+        this.dailyTasks.push(task);
+        this.saveData();
+        this.renderDailyTasks();
+
+        if (input) input.value = '';
+        this.showNotification('Daily task added!');
+    }
+
+    renderDailyTasks() {
+        const container = document.getElementById('dailyTasksList');
+        const dateEl = document.getElementById('dailyTaskDate');
+
+        if (!container) return;
+
+        // Show today's date
+        if (dateEl) {
+            dateEl.textContent = new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        // Filter tasks for today
+        const today = this.formatLocalDate(new Date());
+        const todaysTasks = this.dailyTasks.filter(t => t.date === today);
+
+        if (todaysTasks.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>No tasks for today</h3>
+                    <p>Add tasks to organize your day!</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = todaysTasks.map(task => `
+            <div class="item daily-task ${task.completed ? 'completed' : ''}" data-id="${task.id}">
+                <input type="checkbox" class="item-checkbox" ${task.completed ? 'checked' : ''}
+                       onchange="planner.toggleDailyTaskComplete(${task.id})">
+                <div class="item-content">
+                    <div class="item-title">${this.escapeHtml(task.title)}</div>
+                </div>
+                <div class="item-actions">
+                    <button class="action-btn delete-btn" onclick="planner.deleteDailyTask(${task.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    toggleDailyTaskComplete(id) {
+        const task = this.dailyTasks.find(t => t.id === id);
+        if (task) {
+            task.completed = !task.completed;
+            this.saveData();
+            this.renderDailyTasks();
+            this.showNotification(task.completed ? 'Task completed!' : 'Task marked incomplete');
+        }
+    }
+
+    async deleteDailyTask(id) {
+        const confirmed = await this.showConfirm(
+            'Are you sure you want to delete this task?',
+            'Delete Daily Task'
+        );
+
+        if (!confirmed) return;
+
+        this.dailyTasks = this.dailyTasks.filter(t => t.id !== id);
+        this.saveData();
+        this.renderDailyTasks();
+        this.showNotification('Task deleted');
+    }
+
+    clearCompletedDailyTasks() {
+        const today = this.formatLocalDate(new Date());
+        const completedCount = this.dailyTasks.filter(t => t.date === today && t.completed).length;
+
+        if (completedCount === 0) {
+            this.showNotification('No completed tasks to clear', 'warning');
+            return;
+        }
+
+        this.dailyTasks = this.dailyTasks.filter(t => !(t.date === today && t.completed));
+        this.saveData();
+        this.renderDailyTasks();
+        this.showNotification(`Cleared ${completedCount} completed task${completedCount !== 1 ? 's' : ''}`);
+    }
+
     // Generic Task Renderer
     renderTaskItem(task, type) {
-        const isOverdue = task.deadline && new Date(task.deadline) < new Date() && !task.completed;
-        const deadlineText = task.deadline ? new Date(task.deadline).toLocaleDateString('en-US', {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const deadlineDate = task.deadline ? this.parseLocalDate(task.deadline) : null;
+        const isOverdue = deadlineDate && deadlineDate < today && !task.completed;
+        const deadlineText = deadlineDate ? deadlineDate.toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
             year: 'numeric'
@@ -405,8 +536,10 @@ class LifePlanner {
         });
 
         container.innerHTML = sorted.map(item => {
-            const itemDate = new Date(item.date);
-            const isPast = itemDate < new Date() && itemDate.toDateString() !== new Date().toDateString();
+            const itemDate = this.parseLocalDate(item.date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const isPast = itemDate < today;
 
             return `
                 <div class="item ${isPast ? 'completed' : ''}" data-id="${item.id}">
@@ -495,36 +628,41 @@ class LifePlanner {
 
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-        container.innerHTML = days.map(day => {
-            const routines = this.weeklyRoutines[day];
-            if (routines.length === 0) return '';
+        container.innerHTML = `
+            <div class="week-grid">
+                ${days.map(day => {
+                    const routines = this.weeklyRoutines[day];
+                    const routineCount = routines.length;
 
-            return `
-                <div class="day-schedule">
-                    <div class="day-header">
-                        <span><i class="fas fa-calendar-day"></i> ${day}</span>
-                        <span>${routines.length} routine${routines.length !== 1 ? 's' : ''}</span>
-                    </div>
-                    <div class="day-items">
-                        ${routines.map(routine => `
-                            <div class="item" data-id="${routine.id}" style="margin-bottom: 12px;">
-                                <div class="item-content" style="flex: 1;">
-                                    <div class="item-title">${this.escapeHtml(routine.title)}</div>
-                                    ${routine.time ? `<div class="item-meta">
-                                        <span class="meta-badge"><i class="fas fa-clock"></i> ${routine.time}</span>
-                                    </div>` : ''}
-                                </div>
-                                <div class="item-actions">
-                                    <button class="action-btn delete-btn" onclick="planner.deleteWeeklyRoutine('${day}', ${routine.id})">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
+                    return `
+                        <div class="day-card ${routineCount > 0 ? 'has-routines' : ''}">
+                            <div class="day-card-header">
+                                <div class="day-name">${day}</div>
+                                <div class="day-count">${routineCount} ${routineCount !== 1 ? 'routines' : 'routine'}</div>
                             </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }).join('');
+                            <div class="day-card-content">
+                                ${routineCount === 0 ? `
+                                    <div class="day-empty">
+                                        <i class="fas fa-plus-circle"></i>
+                                        <span>No routines</span>
+                                    </div>
+                                ` : routines.map(routine => `
+                                    <div class="routine-item">
+                                        <div class="routine-info">
+                                            <div class="routine-title">${this.escapeHtml(routine.title)}</div>
+                                            ${routine.time ? `<div class="routine-time"><i class="fas fa-clock"></i> ${routine.time}</div>` : ''}
+                                        </div>
+                                        <button class="routine-delete" onclick="planner.deleteWeeklyRoutine('${day}', ${routine.id})" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
     }
 
     async deleteWeeklyRoutine(day, id) {
@@ -539,6 +677,234 @@ class LifePlanner {
         this.saveData();
         this.renderWeeklyRoutines();
         this.showNotification('Routine deleted');
+    }
+
+    // Goals Management
+    addGoal() {
+        const titleInput = document.getElementById('goalTitle');
+        const descInput = document.getElementById('goalDesc');
+        const typeSelect = document.getElementById('goalType');
+        const targetInput = document.getElementById('goalTarget');
+
+        const title = titleInput?.value.trim();
+        if (!title) {
+            this.showNotification('Please enter a goal title', 'warning');
+            return;
+        }
+
+        const goal = {
+            id: Date.now(),
+            title,
+            description: descInput?.value.trim() || '',
+            type: typeSelect?.value || 'short',
+            targetDate: targetInput?.value || null,
+            completed: false,
+            createdAt: new Date().toISOString()
+        };
+
+        this.goals.push(goal);
+        this.saveData();
+        this.renderGoals();
+
+        // Clear inputs
+        if (titleInput) titleInput.value = '';
+        if (descInput) descInput.value = '';
+        if (targetInput) targetInput.value = '';
+        if (typeSelect) typeSelect.value = 'short';
+
+        this.showNotification('Goal added successfully!');
+    }
+
+    renderGoals() {
+        const shortContainer = document.getElementById('shortGoalsList');
+        const mediumContainer = document.getElementById('mediumGoalsList');
+        const longContainer = document.getElementById('longGoalsList');
+
+        if (!shortContainer || !mediumContainer || !longContainer) return;
+
+        const shortGoals = this.goals.filter(g => g.type === 'short');
+        const mediumGoals = this.goals.filter(g => g.type === 'medium');
+        const longGoals = this.goals.filter(g => g.type === 'long');
+
+        // Render short-term goals
+        if (shortGoals.length === 0) {
+            shortContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-bolt"></i>
+                    <h3>No short-term goals</h3>
+                    <p>Add goals you want to achieve in the next weeks to months!</p>
+                </div>
+            `;
+        } else {
+            shortContainer.innerHTML = shortGoals.map(goal => this.renderGoalCard(goal)).join('');
+        }
+
+        // Render medium-term goals
+        if (mediumGoals.length === 0) {
+            mediumContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>No medium-term goals</h3>
+                    <p>Add goals you want to achieve within a year!</p>
+                </div>
+            `;
+        } else {
+            mediumContainer.innerHTML = mediumGoals.map(goal => this.renderGoalCard(goal)).join('');
+        }
+
+        // Render long-term goals
+        if (longGoals.length === 0) {
+            longContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-mountain"></i>
+                    <h3>No long-term goals</h3>
+                    <p>Add your big dreams and long-term aspirations!</p>
+                </div>
+            `;
+        } else {
+            longContainer.innerHTML = longGoals.map(goal => this.renderGoalCard(goal)).join('');
+        }
+    }
+
+    renderGoalCard(goal) {
+        const targetDate = goal.targetDate ? this.parseLocalDate(goal.targetDate) : null;
+        const targetText = targetDate ? targetDate.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        }) : '';
+
+        return `
+            <div class="goal-card ${goal.completed ? 'completed' : ''}" data-id="${goal.id}">
+                <div class="goal-card-header">
+                    <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                        <input type="checkbox" class="item-checkbox" ${goal.completed ? 'checked' : ''}
+                               onchange="planner.toggleGoalComplete(${goal.id})">
+                        <div class="goal-card-title">${this.escapeHtml(goal.title)}</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn delete-btn" onclick="planner.deleteGoal(${goal.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                ${goal.description ? `<div class="goal-card-desc">${this.escapeHtml(goal.description)}</div>` : ''}
+                <div class="goal-card-meta">
+                    ${targetText ? `<span class="meta-badge deadline"><i class="fas fa-calendar"></i> Target: ${targetText}</span>` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    toggleGoalComplete(id) {
+        const goal = this.goals.find(g => g.id === id);
+        if (goal) {
+            goal.completed = !goal.completed;
+            this.saveData();
+            this.renderGoals();
+            this.showNotification(goal.completed ? 'Goal completed! 🎉' : 'Goal marked incomplete');
+        }
+    }
+
+    async deleteGoal(id) {
+        const confirmed = await this.showConfirm(
+            'Are you sure you want to delete this goal?',
+            'Delete Goal'
+        );
+
+        if (!confirmed) return;
+
+        this.goals = this.goals.filter(g => g.id !== id);
+        this.saveData();
+        this.renderGoals();
+        this.showNotification('Goal deleted');
+    }
+
+    // Notes Management
+    addNote() {
+        const titleInput = document.getElementById('noteTitle');
+        const contentInput = document.getElementById('noteContent');
+
+        const title = titleInput?.value.trim();
+        const content = contentInput?.value.trim();
+
+        if (!title || !content) {
+            this.showNotification('Please enter both title and content', 'warning');
+            return;
+        }
+
+        const note = {
+            id: Date.now(),
+            title,
+            content,
+            createdAt: new Date().toISOString()
+        };
+
+        this.notes.push(note);
+        this.saveData();
+        this.renderNotes();
+
+        // Clear inputs
+        if (titleInput) titleInput.value = '';
+        if (contentInput) contentInput.value = '';
+
+        this.showNotification('Note added successfully!');
+    }
+
+    renderNotes() {
+        const container = document.getElementById('notesList');
+        if (!container) return;
+
+        if (this.notes.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-sticky-note"></i>
+                    <h3>No notes yet</h3>
+                    <p>Start writing down your thoughts and ideas!</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = this.notes
+            .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+            .map(note => {
+                const date = new Date(note.createdAt);
+                return `
+                    <div class="note-card" data-id="${note.id}">
+                        <div class="note-card-actions">
+                            <button class="action-btn delete-btn" onclick="planner.deleteNote(${note.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="note-card-title">${this.escapeHtml(note.title)}</div>
+                        <div class="note-card-content">${this.escapeHtml(note.content)}</div>
+                        <div class="note-card-date">
+                            <i class="fas fa-clock"></i> ${date.toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit'
+                            })}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+    }
+
+    async deleteNote(id) {
+        const confirmed = await this.showConfirm(
+            'Are you sure you want to delete this note?',
+            'Delete Note'
+        );
+
+        if (!confirmed) return;
+
+        this.notes = this.notes.filter(n => n.id !== id);
+        this.saveData();
+        this.renderNotes();
+        this.showNotification('Note deleted');
     }
 
     // Deadline Management
@@ -578,7 +944,7 @@ class LifePlanner {
         now.setHours(0, 0, 0, 0);
 
         container.innerHTML = deadlines.map(item => {
-            const deadline = new Date(item.deadline);
+            const deadline = this.parseLocalDate(item.deadline);
             const daysRemaining = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
 
             let urgencyClass = 'comfortable';
@@ -763,8 +1129,10 @@ class LifePlanner {
     }
 
     formatDateForComparison(year, month, day) {
-        const date = new Date(year, month, day);
-        return date.toISOString().split('T')[0];
+        const y = year;
+        const m = String(month + 1).padStart(2, '0');
+        const d = String(day).padStart(2, '0');
+        return `${y}-${m}-${d}`;
     }
 
     formatDateForInput(year, month, day) {
@@ -789,10 +1157,13 @@ class LifePlanner {
     updateUI() {
         this.renderWorkTasks();
         this.renderPersonalTasks();
+        this.renderDailyTasks();
         this.renderSchedule();
         this.renderWeeklyRoutines();
         this.renderCalendar();
         this.checkDeadlines();
+        this.renderGoals();
+        this.renderNotes();
         this.updateHeaderStats();
     }
 
@@ -818,7 +1189,7 @@ class LifePlanner {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const upcomingEvents = this.scheduleItems.filter(item => {
-            const eventDate = new Date(item.date);
+            const eventDate = this.parseLocalDate(item.date);
             return eventDate >= today;
         }).length;
 
@@ -830,7 +1201,7 @@ class LifePlanner {
             ...this.workTasks.filter(t => t.deadline && !t.completed),
             ...this.personalTasks.filter(t => t.deadline && !t.completed)
         ].filter(task => {
-            const deadline = new Date(task.deadline);
+            const deadline = this.parseLocalDate(task.deadline);
             return deadline <= threeDaysFromNow;
         }).length;
 
@@ -932,24 +1303,30 @@ class LifePlanner {
         const data = {
             workTasks: this.workTasks,
             personalTasks: this.personalTasks,
+            dailyTasks: this.dailyTasks,
             scheduleItems: this.scheduleItems,
-            weeklyRoutines: this.weeklyRoutines
+            weeklyRoutines: this.weeklyRoutines,
+            goals: this.goals,
+            notes: this.notes
         };
-        localStorage.setItem('lifePlannerData', JSON.stringify(data));
+        localStorage.setItem('abishuasPlannerData', JSON.stringify(data));
     }
 
     loadData() {
         try {
-            const saved = localStorage.getItem('lifePlannerData');
+            const saved = localStorage.getItem('abishuasPlannerData');
             if (saved) {
                 const data = JSON.parse(saved);
                 this.workTasks = data.workTasks || [];
                 this.personalTasks = data.personalTasks || [];
+                this.dailyTasks = data.dailyTasks || [];
                 this.scheduleItems = data.scheduleItems || [];
                 this.weeklyRoutines = data.weeklyRoutines || {
                     Monday: [], Tuesday: [], Wednesday: [], Thursday: [],
                     Friday: [], Saturday: [], Sunday: []
                 };
+                this.goals = data.goals || [];
+                this.notes = data.notes || [];
             }
 
             // Load theme preference
@@ -967,6 +1344,21 @@ class LifePlanner {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // Parse date string as local date (fixes timezone offset issues)
+    parseLocalDate(dateString) {
+        if (!dateString) return null;
+        const [year, month, day] = dateString.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    }
+
+    // Format local date to YYYY-MM-DD string
+    formatLocalDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 }
 
@@ -988,5 +1380,5 @@ window.addEventListener('load', () => {
 // Initialize the app when DOM is loaded
 let planner;
 document.addEventListener('DOMContentLoaded', () => {
-    planner = new LifePlanner();
+    planner = new AbishuasPlanner();
 });
