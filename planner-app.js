@@ -970,6 +970,21 @@ class LifePlanner {
     }
 }
 
+// Splash Screen Handler
+window.addEventListener('load', () => {
+    const splashScreen = document.getElementById('splashScreen');
+
+    // Fade out after 2.5 seconds
+    setTimeout(() => {
+        splashScreen.classList.add('fade-out');
+
+        // Remove from DOM after fade animation completes
+        setTimeout(() => {
+            splashScreen.remove();
+        }, 1000); // Match the CSS transition duration
+    }, 2500);
+});
+
 // Initialize the app when DOM is loaded
 let planner;
 document.addEventListener('DOMContentLoaded', () => {
