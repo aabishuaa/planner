@@ -321,8 +321,13 @@ class LifePlanner {
         }
     }
 
-    deleteTask(type, id) {
-        if (!confirm('Are you sure you want to delete this task?')) return;
+    async deleteTask(type, id) {
+        const confirmed = await this.showConfirm(
+            'Are you sure you want to delete this task?',
+            'Delete Task'
+        );
+
+        if (!confirmed) return;
 
         if (type === 'work') {
             this.workTasks = this.workTasks.filter(t => t.id !== id);
@@ -425,8 +430,14 @@ class LifePlanner {
         }).join('');
     }
 
-    deleteScheduleItem(id) {
-        if (!confirm('Delete this schedule item?')) return;
+    async deleteScheduleItem(id) {
+        const confirmed = await this.showConfirm(
+            'Are you sure you want to delete this schedule item?',
+            'Delete Schedule Item'
+        );
+
+        if (!confirmed) return;
+
         this.scheduleItems = this.scheduleItems.filter(item => item.id !== id);
         this.saveData();
         this.renderSchedule();
@@ -516,8 +527,14 @@ class LifePlanner {
         }).join('');
     }
 
-    deleteWeeklyRoutine(day, id) {
-        if (!confirm('Delete this routine?')) return;
+    async deleteWeeklyRoutine(day, id) {
+        const confirmed = await this.showConfirm(
+            'Are you sure you want to delete this weekly routine?',
+            'Delete Routine'
+        );
+
+        if (!confirmed) return;
+
         this.weeklyRoutines[day] = this.weeklyRoutines[day].filter(r => r.id !== id);
         this.saveData();
         this.renderWeeklyRoutines();
@@ -839,6 +856,61 @@ class LifePlanner {
     closeModal() {
         document.querySelectorAll('.modal').forEach(modal => {
             modal.classList.remove('active');
+        });
+    }
+
+    // Custom Confirmation Modal
+    showConfirm(message, title = 'Confirm Action') {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('confirmModal');
+            const messageEl = document.getElementById('confirmModalMessage');
+            const titleEl = document.getElementById('confirmModalTitle');
+            const okBtn = document.getElementById('confirmOkBtn');
+            const cancelBtn = document.getElementById('confirmCancelBtn');
+
+            // Set content
+            messageEl.textContent = message;
+            titleEl.textContent = title;
+
+            // Show modal
+            modal.classList.add('active');
+
+            // Handle button clicks
+            const handleOk = () => {
+                modal.classList.remove('active');
+                cleanup();
+                resolve(true);
+            };
+
+            const handleCancel = () => {
+                modal.classList.remove('active');
+                cleanup();
+                resolve(false);
+            };
+
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    handleCancel();
+                }
+            };
+
+            const cleanup = () => {
+                okBtn.removeEventListener('click', handleOk);
+                cancelBtn.removeEventListener('click', handleCancel);
+                document.removeEventListener('keydown', handleEscape);
+            };
+
+            // Add event listeners
+            okBtn.addEventListener('click', handleOk);
+            cancelBtn.addEventListener('click', handleCancel);
+            document.addEventListener('keydown', handleEscape);
+
+            // Close on backdrop click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    handleCancel();
+                }
+            }, { once: true });
         });
     }
 
