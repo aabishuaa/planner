@@ -53,20 +53,34 @@ A beautiful, intuitive planner application designed to help you stay organized a
 
 ## 🚀 Getting Started
 
-### Installation
+### Quick Start (localStorage mode)
 
-1. Simply open `new.html` in your web browser
+1. Simply open `index.html` in your web browser
 2. No installation or server required!
 3. Works completely offline
+4. Data saved to browser's localStorage
+
+### Full Setup (Firebase cloud storage)
+
+1. Open `index.html` in your web browser
+2. Follow the setup guide in [FIREBASE_SETUP.md](FIREBASE_SETUP.md)
+3. Configure your Firebase project
+4. Update `firebase-config.js` with your credentials
+5. Enjoy cloud storage and multi-device sync!
 
 ### File Structure
 
 ```
 planner/
-├── new.html           # Main application file
-├── planner-styles.css # All styling (blue/purple theme)
-├── planner-app.js     # Application logic
-└── README.md          # This file
+├── index.html                # Main application file
+├── planner-styles.css        # All styling (blue/purple theme)
+├── planner-app.js            # Application logic
+├── firebase-config.js        # Firebase credentials (you create this)
+├── firebase-config.example.js # Template for Firebase config
+├── firebase-service.js       # Firebase database service
+├── FIREBASE_SETUP.md         # Detailed Firebase setup guide
+├── .gitignore                # Git ignore file
+└── README.md                 # This file
 ```
 
 ## 📖 How to Use
@@ -131,10 +145,25 @@ planner/
 
 ## 💾 Data Storage
 
-- All data is stored locally in your browser's localStorage
-- Data persists even after closing the browser
-- No server or account required
-- Your data never leaves your device
+**Now powered by Firebase! 🔥**
+
+- **Cloud Storage**: Your data is stored in Google Firebase Realtime Database
+- **Real-time Sync**: Changes sync instantly across devices
+- **Automatic Backup**: Your data is safely backed up in the cloud
+- **Offline Support**: Works offline with automatic sync when back online
+- **Secure**: Each user's data is private and authenticated
+- **Migration**: Existing localStorage data is automatically migrated to Firebase
+
+### Setup Required
+To enable cloud storage, you need to:
+1. Create a free Firebase account
+2. Set up a Firebase project
+3. Configure the app with your credentials
+
+**See [FIREBASE_SETUP.md](FIREBASE_SETUP.md) for detailed instructions.**
+
+### Fallback Mode
+If Firebase is not configured, the app automatically falls back to localStorage mode and works exactly as before.
 
 ## 🎨 Theme Toggle
 
@@ -191,7 +220,9 @@ Remember to:
 - **HTML5**: Structure
 - **CSS3**: Styling with modern features
 - **Vanilla JavaScript**: No frameworks required
-- **LocalStorage API**: Data persistence
+- **Firebase Realtime Database**: Cloud data storage and sync
+- **Firebase Authentication**: Secure user authentication
+- **LocalStorage API**: Fallback data persistence
 - **Font Awesome**: Icons
 - **Google Fonts**: Poppins typography
 
@@ -214,28 +245,51 @@ The planner adapts to different screen sizes:
 - **Tablet**: Adjusted grid layout
 - **Mobile**: Single column, touch-friendly
 
-## 🔒 Privacy
+## 🔒 Privacy & Security
 
-- No data collection
-- No analytics
-- No tracking
-- Everything stored locally
+### Firebase Mode
+- Your data is stored securely in Firebase Realtime Database
+- Each user has a unique, authenticated account
+- Firebase security rules ensure only you can access your data
+- Data is encrypted in transit (HTTPS)
+- No third-party data sharing
+- Anonymous authentication (no personal info required)
+
+### localStorage Mode (Fallback)
+- Everything stored locally in your browser
+- No data leaves your device
 - No account required
-- No internet needed (after initial load)
+- No internet needed
+
+### What We Don't Collect
+- No personal information
+- No usage analytics
+- No tracking cookies
+- No third-party advertisers
 
 ## 🐛 Troubleshooting
+
+**Firebase not working?**
+- Check that `firebase-config.js` exists and has valid credentials
+- Open browser console (F12) to see error messages
+- Verify Firebase project is active in Firebase Console
+- The app will automatically fall back to localStorage if Firebase fails
 
 **Data not saving?**
 - Ensure cookies/localStorage is enabled in your browser
 - Check if browser is in private/incognito mode
+- Check browser console for Firebase authentication errors
 
 **Styles not loading?**
 - Ensure `planner-styles.css` is in the same folder
 - Check browser console for errors
 
 **Functions not working?**
-- Ensure `planner-app.js` is in the same folder
+- Ensure all JavaScript files are in the same folder
 - Check browser console for JavaScript errors
+- Verify Firebase scripts are loading (check Network tab)
+
+**For more Firebase troubleshooting, see [FIREBASE_SETUP.md](FIREBASE_SETUP.md#troubleshooting)**
 
 ## 📄 License
 

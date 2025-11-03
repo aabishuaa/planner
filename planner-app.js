@@ -32,8 +32,19 @@ class AbishuasPlanner {
         this.init();
     }
 
-    init() {
-        this.loadData();
+    async init() {
+        // Initialize Firebase
+        await window.firebaseService.initialize();
+
+        // Migrate from localStorage if needed
+        const migrated = await window.firebaseService.migrateFromLocalStorage();
+        if (migrated) {
+            console.log('Successfully migrated data from localStorage to Firebase');
+        }
+
+        // Load data
+        await this.loadData();
+
         this.setupEventListeners();
         this.updateUI();
         this.updateDate();
@@ -1216,10 +1227,10 @@ class AbishuasPlanner {
     }
 
     // Theme Management
-    toggleTheme() {
+    async toggleTheme() {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem('darkMode', isDark);
+        await window.firebaseService.saveTheme(isDark);
         this.showNotification(`${isDark ? 'Dark' : 'Light'} mode enabled`);
     }
 
@@ -1299,7 +1310,7 @@ class AbishuasPlanner {
     }
 
     // Data Persistence
-    saveData() {
+    async saveData() {
         const data = {
             workTasks: this.workTasks,
             personalTasks: this.personalTasks,
@@ -1309,14 +1320,13 @@ class AbishuasPlanner {
             goals: this.goals,
             notes: this.notes
         };
-        localStorage.setItem('abishuasPlannerData', JSON.stringify(data));
+        await window.firebaseService.saveData(data);
     }
 
-    loadData() {
+    async loadData() {
         try {
-            const saved = localStorage.getItem('abishuasPlannerData');
-            if (saved) {
-                const data = JSON.parse(saved);
+            const data = await window.firebaseService.loadData();
+            if (data) {
                 this.workTasks = data.workTasks || [];
                 this.personalTasks = data.personalTasks || [];
                 this.dailyTasks = data.dailyTasks || [];
@@ -1330,7 +1340,7 @@ class AbishuasPlanner {
             }
 
             // Load theme preference
-            const darkMode = localStorage.getItem('darkMode') === 'true';
+            const darkMode = await window.firebaseService.loadTheme();
             if (darkMode) {
                 document.body.classList.add('dark-mode');
             }
