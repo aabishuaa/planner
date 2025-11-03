@@ -3,13 +3,13 @@
 // See FIREBASE_SETUP.md for detailed setup instructions
 
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY_HERE",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyACd1AnwTfDdSJBLssg2aV3ck5bZk3powk",
+  authDomain: "planner-7f03e.firebaseapp.com",
+  projectId: "planner-7f03e",
+  storageBucket: "planner-7f03e.firebasestorage.app",
+  messagingSenderId: "453853615791",
+  appId: "1:453853615791:web:3e22bbb3087aec7c7b665a",
+  measurementId: "G-WPY9D01W3X"
 };
 
 // Initialize Firebase
