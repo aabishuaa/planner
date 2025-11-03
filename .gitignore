@@ -1,0 +1,28 @@
+# Firebase configuration with actual credentials
+# Users should create their own firebase-config.js from firebase-config.example.js
+firebase-config.js
+
+# Optional: Keep if you want to commit the template
+# firebase-config.js
+
+# Node modules (if using npm/node in the future)
+node_modules/
+
+# Environment files
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
