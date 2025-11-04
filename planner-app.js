@@ -1137,16 +1137,20 @@ class AbishuasPlanner {
             dayEl.classList.add('today');
         }
 
-        // Get events and deadlines for this day
+        // Get events, deadlines, and routines for this day
         const dateStr = this.formatDateForComparison(year, month, day);
         const events = this.getEventsForDate(dateStr);
         const deadlines = this.getDeadlinesForDate(dateStr);
+        const routines = this.getRoutinesForDate(dateStr);
 
         if (events.length > 0) {
             dayEl.classList.add('has-event');
         }
         if (deadlines.length > 0) {
             dayEl.classList.add('has-deadline');
+        }
+        if (routines.length > 0) {
+            dayEl.classList.add('has-routine');
         }
 
         // Day number
@@ -1156,7 +1160,7 @@ class AbishuasPlanner {
         dayEl.appendChild(numberEl);
 
         // Event indicators
-        if (!isOtherMonth && (events.length > 0 || deadlines.length > 0)) {
+        if (!isOtherMonth && (events.length > 0 || deadlines.length > 0 || routines.length > 0)) {
             const eventsContainer = document.createElement('div');
             eventsContainer.className = 'calendar-day-events';
 
@@ -1174,10 +1178,17 @@ class AbishuasPlanner {
                 eventsContainer.appendChild(dot);
             }
 
+            // Add routine dots
+            for (let i = 0; i < Math.min(routines.length, 2); i++) {
+                const dot = document.createElement('div');
+                dot.className = 'calendar-routine-dot';
+                eventsContainer.appendChild(dot);
+            }
+
             dayEl.appendChild(eventsContainer);
 
             // Count indicator
-            const total = events.length + deadlines.length;
+            const total = events.length + deadlines.length + routines.length;
             if (total > 2) {
                 const countEl = document.createElement('div');
                 countEl.className = 'calendar-day-count';
@@ -1222,6 +1233,16 @@ class AbishuasPlanner {
             ...this.workTasks.filter(t => t.deadline === dateStr && !t.completed),
             ...this.personalTasks.filter(t => t.deadline === dateStr && !t.completed)
         ];
+    }
+
+    getRoutinesForDate(dateStr) {
+        // Parse the date to get the day of week
+        const date = new Date(dateStr + 'T00:00:00');
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const dayName = dayNames[date.getDay()];
+
+        // Return routines for this day of week
+        return this.weeklyRoutines[dayName] || [];
     }
 
     // UI Updates

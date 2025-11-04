@@ -1282,7 +1282,14 @@ body.dark-mode .calendar-legend {
     border: 2px solid var(--danger);
 }
 
-.calendar-day.has-event.has-deadline {
+.calendar-day.has-routine {
+    border: 2px solid var(--success);
+}
+
+.calendar-day.has-event.has-deadline,
+.calendar-day.has-event.has-routine,
+.calendar-day.has-deadline.has-routine,
+.calendar-day.has-event.has-deadline.has-routine {
     border: 2px solid var(--warning);
 }
 
@@ -1312,6 +1319,13 @@ body.dark-mode .calendar-legend {
     height: 6px;
     border-radius: 50%;
     background: var(--danger);
+}
+
+.calendar-routine-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
 }
 
 .calendar-day-count {
