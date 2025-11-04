@@ -48,33 +48,60 @@ class FirebaseService {
     }
 
     /**
-     * Authenticate user (anonymous auth for simplicity)
-     * Users can optionally implement email/password auth later
+     * Authenticate user (requires Google Sign-In or Email/Password)
+     * Redirects to auth page if not authenticated
      */
     async authenticateUser() {
         return new Promise((resolve, reject) => {
             // Check if user is already signed in
             this.auth.onAuthStateChanged(async (user) => {
                 if (user) {
+                    // User is authenticated
                     this.userId = user.uid;
                     this.userDataRef = this.db.ref(`users/${this.userId}/plannerData`);
-                    console.log('User authenticated:', this.userId);
+                    console.log('User authenticated:', this.userId, user.email || user.displayName);
+
+                    // Migrate anonymous user data if needed
+                    await this.migrateAnonymousData(user);
+
                     resolve(user);
                 } else {
-                    // Sign in anonymously
-                    try {
-                        const userCredential = await this.auth.signInAnonymously();
-                        this.userId = userCredential.user.uid;
-                        this.userDataRef = this.db.ref(`users/${this.userId}/plannerData`);
-                        console.log('User signed in anonymously:', this.userId);
-                        resolve(userCredential.user);
-                    } catch (error) {
-                        console.error('Authentication error:', error);
-                        reject(error);
-                    }
+                    // No user signed in, redirect to auth page
+                    console.log('No authenticated user, redirecting to auth page');
+                    window.location.href = 'auth.html';
+                    reject(new Error('Not authenticated'));
                 }
             });
         });
+    }
+
+    /**
+     * Migrate data from anonymous user to authenticated user
+     */
+    async migrateAnonymousData(user) {
+        try {
+            // Check if there's anonymous data in localStorage
+            const anonymousData = localStorage.getItem('abishuasPlannerData');
+            if (!anonymousData) return;
+
+            // Check if user already has data in Firebase
+            const snapshot = await this.userDataRef.once('value');
+            if (snapshot.exists()) {
+                console.log('User already has data, skipping anonymous migration');
+                return;
+            }
+
+            // Migrate anonymous data to authenticated user
+            const data = JSON.parse(anonymousData);
+            console.log('Migrating anonymous data to authenticated user...');
+            await this.saveData(data);
+
+            // Clear anonymous data from localStorage
+            localStorage.removeItem('abishuasPlannerData');
+            console.log('Anonymous data migration completed');
+        } catch (error) {
+            console.error('Error migrating anonymous data:', error);
+        }
     }
 
     /**
@@ -288,10 +315,20 @@ class FirebaseService {
                 this.userId = null;
                 this.userDataRef = null;
                 this.isInitialized = false;
+                // Redirect to auth page
+                window.location.href = 'auth.html';
             } catch (error) {
                 console.error('Error signing out:', error);
             }
         }
+    }
+
+    /**
+     * Get current authenticated user
+     * @returns {Object|null} User object
+     */
+    getCurrentUser() {
+        return this.auth.currentUser;
     }
 
     /**

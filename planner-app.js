@@ -45,6 +45,9 @@ class AbishuasPlanner {
         // Load data
         await this.loadData();
 
+        // Display user profile
+        this.displayUserProfile();
+
         this.setupEventListeners();
         this.updateUI();
         this.updateDate();
@@ -107,6 +110,25 @@ class AbishuasPlanner {
         document.getElementById('prevMonthBtn')?.addEventListener('click', () => this.changeMonth(-1));
         document.getElementById('nextMonthBtn')?.addEventListener('click', () => this.changeMonth(1));
         document.getElementById('todayBtn')?.addEventListener('click', () => this.goToToday());
+
+        // User profile dropdown
+        document.getElementById('userProfileBtn')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleUserDropdown();
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('userDropdown');
+            const profileBtn = document.getElementById('userProfileBtn');
+            if (dropdown && !dropdown.contains(e.target) && !profileBtn.contains(e.target)) {
+                dropdown.classList.remove('active');
+                profileBtn.classList.remove('active');
+            }
+        });
+
+        // Sign out button
+        document.getElementById('signOutBtn')?.addEventListener('click', () => this.handleSignOut());
     }
 
     // Tab Management
@@ -1347,6 +1369,63 @@ class AbishuasPlanner {
         } catch (error) {
             console.error('Error loading data:', error);
         }
+    }
+
+    // User Profile Management
+    displayUserProfile() {
+        const user = window.firebaseService.getCurrentUser();
+        if (!user) return;
+
+        const displayName = user.displayName || user.email || 'User';
+        const email = user.email || '';
+        const photoURL = user.photoURL || this.getDefaultAvatar(displayName);
+
+        // Update header user profile
+        const userAvatar = document.getElementById('userAvatar');
+        const userName = document.getElementById('userName');
+
+        if (userAvatar) userAvatar.src = photoURL;
+        if (userName) userName.textContent = displayName;
+
+        // Update dropdown
+        const userAvatarDropdown = document.getElementById('userAvatarDropdown');
+        const userNameDropdown = document.getElementById('userNameDropdown');
+        const userEmailDropdown = document.getElementById('userEmailDropdown');
+
+        if (userAvatarDropdown) userAvatarDropdown.src = photoURL;
+        if (userNameDropdown) userNameDropdown.textContent = displayName;
+        if (userEmailDropdown) userEmailDropdown.textContent = email;
+    }
+
+    getDefaultAvatar(name) {
+        // Generate a default avatar based on initials
+        const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const colors = ['4A90E2', '7B68EE', '10B981', 'F59E0B', 'EF4444', 'EC4899'];
+        const color = colors[name.length % colors.length];
+
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${color}&color=fff&size=128&bold=true`;
+    }
+
+    toggleUserDropdown() {
+        const dropdown = document.getElementById('userDropdown');
+        const profileBtn = document.getElementById('userProfileBtn');
+
+        if (!dropdown || !profileBtn) return;
+
+        const isActive = dropdown.classList.toggle('active');
+        profileBtn.classList.toggle('active', isActive);
+    }
+
+    async handleSignOut() {
+        const confirmed = await this.showConfirm(
+            'Are you sure you want to sign out?',
+            'Sign Out'
+        );
+
+        if (!confirmed) return;
+
+        this.showNotification('Signing out...');
+        await window.firebaseService.signOut();
     }
 
     // Utility Functions
