@@ -622,6 +622,49 @@
         </div>
     </div>
 
+    <!-- Note View/Edit Modal -->
+    <div class="modal" id="noteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-sticky-note"></i> <span id="noteModalTitle">View Note</span>
+                </h3>
+                <button class="modal-close">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="viewNoteId">
+
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" id="viewNoteTitle" class="form-input" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Content</label>
+                    <textarea id="viewNoteContent" class="form-textarea" rows="10" readonly></textarea>
+                </div>
+
+                <div class="note-modal-date">
+                    <i class="fas fa-clock"></i> <span id="viewNoteDate"></span>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-close">Close</button>
+                <button class="btn btn-danger" id="deleteNoteBtn">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+                <button class="btn btn-primary" id="editNoteBtn">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-primary" id="saveNoteBtn" style="display: none;">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification Toast -->
     <div class="notification" id="notification">
         <i class="fas fa-check-circle"></i>
