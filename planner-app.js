@@ -210,6 +210,8 @@ class AbishuasPlanner {
         this.workTasks.push(task);
         this.saveData();
         this.renderWorkTasks();
+        this.updateHeaderStats();
+        this.checkDeadlines();
 
         // Clear inputs
         if (titleInput) titleInput.value = '';
@@ -275,6 +277,8 @@ class AbishuasPlanner {
         this.personalTasks.push(task);
         this.saveData();
         this.renderPersonalTasks();
+        this.updateHeaderStats();
+        this.checkDeadlines();
 
         // Clear inputs
         if (titleInput) titleInput.value = '';
@@ -571,6 +575,7 @@ class AbishuasPlanner {
         this.saveData();
         this.renderSchedule();
         this.renderCalendar();
+        this.updateHeaderStats();
 
         // Clear inputs
         if (titleInput) titleInput.value = '';
@@ -643,6 +648,7 @@ class AbishuasPlanner {
         this.saveData();
         this.renderSchedule();
         this.renderCalendar();
+        this.updateHeaderStats();
         this.showNotification('Schedule item deleted');
     }
 
@@ -667,6 +673,10 @@ class AbishuasPlanner {
             day
         };
 
+        // Ensure the day array exists
+        if (!this.weeklyRoutines[day]) {
+            this.weeklyRoutines[day] = [];
+        }
         this.weeklyRoutines[day].push(routine);
         this.saveData();
         this.renderWeeklyRoutines();
@@ -702,7 +712,7 @@ class AbishuasPlanner {
         container.innerHTML = `
             <div class="week-grid">
                 ${days.map(day => {
-                    const routines = this.weeklyRoutines[day];
+                    const routines = this.weeklyRoutines[day] || [];
                     const routineCount = routines.length;
 
                     return `
@@ -744,6 +754,10 @@ class AbishuasPlanner {
 
         if (!confirmed) return;
 
+        // Ensure the day array exists before filtering
+        if (!this.weeklyRoutines[day]) {
+            this.weeklyRoutines[day] = [];
+        }
         this.weeklyRoutines[day] = this.weeklyRoutines[day].filter(r => r.id !== id);
         this.saveData();
         this.renderWeeklyRoutines();
@@ -1412,10 +1426,17 @@ class AbishuasPlanner {
                 this.personalTasks = data.personalTasks || [];
                 this.dailyTasks = data.dailyTasks || [];
                 this.scheduleItems = data.scheduleItems || [];
-                this.weeklyRoutines = data.weeklyRoutines || {
+
+                // Ensure all days exist in weeklyRoutines
+                const defaultRoutines = {
                     Monday: [], Tuesday: [], Wednesday: [], Thursday: [],
                     Friday: [], Saturday: [], Sunday: []
                 };
+                this.weeklyRoutines = {
+                    ...defaultRoutines,
+                    ...(data.weeklyRoutines || {})
+                };
+
                 this.goals = data.goals || [];
                 this.notes = data.notes || [];
             }
