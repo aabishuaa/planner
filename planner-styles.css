@@ -391,6 +391,88 @@ body.dark-mode .current-date {
     resize: vertical;
 }
 
+.form-hint {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-top: 8px;
+}
+
+/* Time Input Wrapper */
+.time-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.quick-time-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.quick-time-btn {
+    padding: 10px 16px;
+    border: 2px solid var(--lavender);
+    border-radius: var(--border-radius-sm);
+    background: var(--card-bg);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 90px;
+}
+
+.quick-time-btn:hover {
+    border-color: var(--primary-blue);
+    background: rgba(74, 144, 226, 0.1);
+    transform: translateY(-1px);
+}
+
+.quick-time-btn.selected {
+    border-color: var(--primary-blue);
+    background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.custom-time-input {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.custom-time-input .form-input {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.clear-time-btn {
+    padding: 14px 16px;
+    border: 2px solid var(--danger);
+    border-radius: var(--border-radius-sm);
+    background: var(--card-bg);
+    color: var(--danger);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+    font-size: 1rem;
+}
+
+.clear-time-btn:hover {
+    background: var(--danger);
+    color: white;
+    transform: translateY(-1px);
+}
+
 /* Buttons */
 .btn {
     padding: 14px 28px;
@@ -1532,5 +1614,17 @@ body.dark-mode .calendar-legend {
 
     .user-dropdown {
         width: 240px;
+    }
+
+    /* Time picker mobile styles */
+    .quick-time-btn {
+        min-width: 80px;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    .clear-time-btn {
+        padding: 12px 14px;
+        min-width: 45px;
     }
 }

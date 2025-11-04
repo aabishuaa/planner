@@ -86,6 +86,41 @@ class AbishuasPlanner {
         // Weekly Routines
         document.getElementById('addRoutineBtn')?.addEventListener('click', () => this.addWeeklyRoutine());
 
+        // Quick time buttons for weekly routines
+        document.querySelectorAll('.quick-time-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const time = e.target.closest('.quick-time-btn').dataset.time;
+                const timeInput = document.getElementById('routineTime');
+                if (timeInput) {
+                    timeInput.value = time;
+                    // Add visual feedback
+                    document.querySelectorAll('.quick-time-btn').forEach(b => b.classList.remove('selected'));
+                    e.target.closest('.quick-time-btn').classList.add('selected');
+                }
+            });
+        });
+
+        // Clear time button
+        document.getElementById('clearRoutineTime')?.addEventListener('click', () => {
+            const timeInput = document.getElementById('routineTime');
+            if (timeInput) {
+                timeInput.value = '';
+                document.querySelectorAll('.quick-time-btn').forEach(b => b.classList.remove('selected'));
+            }
+        });
+
+        // Update quick-time button selection when time input changes manually
+        document.getElementById('routineTime')?.addEventListener('change', (e) => {
+            const selectedTime = e.target.value;
+            document.querySelectorAll('.quick-time-btn').forEach(btn => {
+                if (btn.dataset.time === selectedTime) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            });
+        });
+
         // Goals
         document.getElementById('addGoalBtn')?.addEventListener('click', () => this.addGoal());
 
@@ -640,6 +675,9 @@ class AbishuasPlanner {
         if (titleInput) titleInput.value = '';
         if (timeInput) timeInput.value = '';
 
+        // Clear quick-time button selection
+        document.querySelectorAll('.quick-time-btn').forEach(b => b.classList.remove('selected'));
+
         this.showNotification('Weekly routine added!');
     }
 
@@ -683,7 +721,7 @@ class AbishuasPlanner {
                                     <div class="routine-item">
                                         <div class="routine-info">
                                             <div class="routine-title">${this.escapeHtml(routine.title)}</div>
-                                            ${routine.time ? `<div class="routine-time"><i class="fas fa-clock"></i> ${routine.time}</div>` : ''}
+                                            ${routine.time ? `<div class="routine-time"><i class="fas fa-clock"></i> ${this.formatTime12Hour(routine.time)}</div>` : ''}
                                         </div>
                                         <button class="routine-delete" onclick="planner.deleteWeeklyRoutine('${day}', ${routine.id})" title="Delete">
                                             <i class="fas fa-trash"></i>
@@ -1433,6 +1471,15 @@ class AbishuasPlanner {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // Format time from 24-hour format (HH:MM) to 12-hour format with AM/PM
+    formatTime12Hour(time24) {
+        if (!time24) return '';
+        const [hours, minutes] = time24.split(':').map(Number);
+        const period = hours >= 12 ? 'PM' : 'AM';
+        const hours12 = hours % 12 || 12;
+        return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
     }
 
     // Parse date string as local date (fixes timezone offset issues)

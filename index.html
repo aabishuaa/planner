@@ -355,23 +355,38 @@
                     Set up tasks that repeat every week on specific days. Perfect for regular commitments!
                 </p>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Day of Week *</label>
-                        <select id="routineDay" class="form-select">
-                            <option value="">Select a day...</option>
-                            <option value="Monday">Monday</option>
-                            <option value="Tuesday">Tuesday</option>
-                            <option value="Wednesday">Wednesday</option>
-                            <option value="Thursday">Thursday</option>
-                            <option value="Friday">Friday</option>
-                            <option value="Saturday">Saturday</option>
-                            <option value="Sunday">Sunday</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Time (Optional)</label>
-                        <input type="time" id="routineTime" class="form-input">
+                <div class="form-group">
+                    <label class="form-label">Day of Week *</label>
+                    <select id="routineDay" class="form-select">
+                        <option value="">Select a day...</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Sunday">Sunday</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Time (Optional)</label>
+                    <div class="time-input-wrapper">
+                        <div class="quick-time-buttons">
+                            <button type="button" class="quick-time-btn" data-time="06:00">6:00 AM</button>
+                            <button type="button" class="quick-time-btn" data-time="08:00">8:00 AM</button>
+                            <button type="button" class="quick-time-btn" data-time="12:00">12:00 PM</button>
+                            <button type="button" class="quick-time-btn" data-time="17:00">5:00 PM</button>
+                            <button type="button" class="quick-time-btn" data-time="18:00">6:00 PM</button>
+                            <button type="button" class="quick-time-btn" data-time="20:00">8:00 PM</button>
+                        </div>
+                        <div class="custom-time-input">
+                            <input type="time" id="routineTime" class="form-input">
+                            <button type="button" class="clear-time-btn" id="clearRoutineTime" title="Clear time">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <small class="form-hint">Click a quick time or enter a custom time</small>
                     </div>
                 </div>
 
