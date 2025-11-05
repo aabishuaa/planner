@@ -691,11 +691,10 @@ class AbishuasPlanner {
         const container = document.getElementById('weeklyTimetable');
         if (!container) return;
 
-        // Generate time slots (6 AM to 10 PM, 30-minute intervals)
+        // Generate time slots (12 AM to 12 AM, 30-minute intervals)
         const timeSlots = [];
-        for (let hour = 6; hour <= 22; hour++) {
+        for (let hour = 0; hour < 24; hour++) {
             for (let minute of [0, 30]) {
-                if (hour === 22 && minute === 30) break; // Stop at 10:00 PM
                 const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
                 timeSlots.push(time24);
             }

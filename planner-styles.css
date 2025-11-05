@@ -34,6 +34,11 @@
     --shadow-md: 0 4px 16px rgba(74, 144, 226, 0.15);
     --shadow-lg: 0 8px 24px rgba(74, 144, 226, 0.2);
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Timetable Colors */
+    --border-color: #E5E7EB;
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F9FAFB;
 }
 
 body.dark-mode {
@@ -43,6 +48,11 @@ body.dark-mode {
     --text-primary: #E5E7EB;
     --text-secondary: #D1D5DB;
     --text-muted: #9CA3AF;
+
+    /* Timetable Colors - Dark Mode */
+    --border-color: #374151;
+    --bg-primary: #1F2937;
+    --bg-secondary: #111827;
 }
 
 * {
@@ -973,7 +983,6 @@ body.dark-mode .current-date {
 
 .modal-close:hover {
     color: var(--danger);
-    transform: rotate(90deg);
 }
 
 .modal-footer {
