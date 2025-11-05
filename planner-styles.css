@@ -1701,3 +1701,173 @@ body.dark-mode .calendar-legend {
         min-width: 45px;
     }
 }
+
+/* Timetable Styles */
+.timetable-container {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+.timetable {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    gap: 1px;
+    background: var(--border-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    min-width: 900px;
+}
+
+.timetable-header {
+    background: var(--bg-secondary);
+    padding: 16px 12px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.timetable-time {
+    background: var(--bg-secondary);
+    padding: 12px 8px;
+    font-size: 0.85rem;
+    text-align: center;
+    color: var(--text-secondary);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.timetable-cell {
+    background: var(--bg-primary);
+    padding: 8px;
+    min-height: 50px;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.timetable-cell:hover {
+    background: rgba(74, 144, 226, 0.1);
+}
+
+.timetable-cell.has-routine {
+    background: linear-gradient(135deg, rgba(74, 144, 226, 0.15), rgba(123, 104, 238, 0.15));
+    cursor: default;
+}
+
+.timetable-cell.has-routine:hover {
+    background: linear-gradient(135deg, rgba(74, 144, 226, 0.25), rgba(123, 104, 238, 0.25));
+}
+
+.routine-block {
+    background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
+    color: white;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    width: 100%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.routine-block-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.routine-block-delete {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.routine-block-delete:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.timetable-add-hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    opacity: 0;
+    transition: var(--transition);
+    pointer-events: none;
+}
+
+.timetable-cell:hover .timetable-add-hint {
+    opacity: 0.5;
+}
+
+.timetable-cell.has-routine:hover .timetable-add-hint {
+    opacity: 0;
+}
+
+/* Dark mode adjustments for timetable */
+.dark-mode .timetable {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .timetable-header {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .timetable-time {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .timetable-cell {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .timetable-cell:hover {
+    background: rgba(74, 144, 226, 0.15);
+}
+
+/* Responsive timetable */
+@media (max-width: 768px) {
+    .timetable {
+        grid-template-columns: 60px repeat(7, 1fr);
+        min-width: 700px;
+        font-size: 0.85rem;
+    }
+
+    .timetable-header {
+        padding: 12px 6px;
+        font-size: 0.85rem;
+    }
+
+    .timetable-time {
+        padding: 8px 4px;
+        font-size: 0.75rem;
+    }
+
+    .routine-block {
+        padding: 6px 8px;
+        font-size: 0.75rem;
+    }
+}

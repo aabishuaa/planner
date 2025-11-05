@@ -83,43 +83,8 @@ class AbishuasPlanner {
         // Schedule
         document.getElementById('addScheduleBtn')?.addEventListener('click', () => this.addScheduleItem());
 
-        // Weekly Routines
-        document.getElementById('addRoutineBtn')?.addEventListener('click', () => this.addWeeklyRoutine());
-
-        // Quick time buttons for weekly routines
-        document.querySelectorAll('.quick-time-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const time = e.target.closest('.quick-time-btn').dataset.time;
-                const timeInput = document.getElementById('routineTime');
-                if (timeInput) {
-                    timeInput.value = time;
-                    // Add visual feedback
-                    document.querySelectorAll('.quick-time-btn').forEach(b => b.classList.remove('selected'));
-                    e.target.closest('.quick-time-btn').classList.add('selected');
-                }
-            });
-        });
-
-        // Clear time button
-        document.getElementById('clearRoutineTime')?.addEventListener('click', () => {
-            const timeInput = document.getElementById('routineTime');
-            if (timeInput) {
-                timeInput.value = '';
-                document.querySelectorAll('.quick-time-btn').forEach(b => b.classList.remove('selected'));
-            }
-        });
-
-        // Update quick-time button selection when time input changes manually
-        document.getElementById('routineTime')?.addEventListener('change', (e) => {
-            const selectedTime = e.target.value;
-            document.querySelectorAll('.quick-time-btn').forEach(btn => {
-                if (btn.dataset.time === selectedTime) {
-                    btn.classList.add('selected');
-                } else {
-                    btn.classList.remove('selected');
-                }
-            });
-        });
+        // Weekly Routines - Add routine modal
+        document.getElementById('saveRoutineModalBtn')?.addEventListener('click', () => this.saveRoutineFromModal());
 
         // Goals
         document.getElementById('addGoalBtn')?.addEventListener('click', () => this.addGoal());
@@ -369,7 +334,12 @@ class AbishuasPlanner {
         const today = this.formatLocalDate(new Date());
         const todaysTasks = this.dailyTasks.filter(t => t.date === today);
 
-        if (todaysTasks.length === 0) {
+        // Filter uncompleted tasks from previous days
+        const previousUncompletedTasks = this.dailyTasks.filter(t =>
+            t.date < today && !t.completed
+        ).sort((a, b) => b.date.localeCompare(a.date)); // Most recent first
+
+        if (todaysTasks.length === 0 && previousUncompletedTasks.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-check-circle"></i>
@@ -380,20 +350,78 @@ class AbishuasPlanner {
             return;
         }
 
-        container.innerHTML = todaysTasks.map(task => `
-            <div class="item daily-task ${task.completed ? 'completed' : ''}" data-id="${task.id}">
-                <input type="checkbox" class="item-checkbox" ${task.completed ? 'checked' : ''}
-                       onchange="planner.toggleDailyTaskComplete(${task.id})">
-                <div class="item-content">
-                    <div class="item-title">${this.escapeHtml(task.title)}</div>
+        let html = '';
+
+        // Render today's tasks
+        if (todaysTasks.length > 0) {
+            html += todaysTasks.map(task => `
+                <div class="item daily-task ${task.completed ? 'completed' : ''}" data-id="${task.id}">
+                    <input type="checkbox" class="item-checkbox" ${task.completed ? 'checked' : ''}
+                           onchange="planner.toggleDailyTaskComplete(${task.id})">
+                    <div class="item-content">
+                        <div class="item-title">${this.escapeHtml(task.title)}</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn delete-btn" onclick="planner.deleteDailyTask(${task.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="item-actions">
-                    <button class="action-btn delete-btn" onclick="planner.deleteDailyTask(${task.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `).join('');
+            `).join('');
+        }
+
+        // Render uncompleted tasks from previous days
+        if (previousUncompletedTasks.length > 0) {
+            html += `
+                <div style="margin-top: 24px; padding-top: 24px; border-top: 2px solid var(--border-color);">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; color: var(--text-secondary);">
+                        <i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i>
+                        <strong>Uncompleted tasks from previous days</strong>
+                    </div>
+            `;
+
+            // Group tasks by date
+            const tasksByDate = {};
+            previousUncompletedTasks.forEach(task => {
+                if (!tasksByDate[task.date]) {
+                    tasksByDate[task.date] = [];
+                }
+                tasksByDate[task.date].push(task);
+            });
+
+            // Render each group
+            Object.keys(tasksByDate).sort((a, b) => b.localeCompare(a)).forEach(date => {
+                const dateObj = this.parseLocalDate(date);
+                const dateStr = dateObj.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                html += `<div style="margin-top: 12px; color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;">
+                    <i class="fas fa-calendar"></i> ${dateStr}
+                </div>`;
+
+                html += tasksByDate[date].map(task => `
+                    <div class="item daily-task ${task.completed ? 'completed' : ''}" data-id="${task.id}" style="opacity: 0.85;">
+                        <input type="checkbox" class="item-checkbox" ${task.completed ? 'checked' : ''}
+                               onchange="planner.toggleDailyTaskComplete(${task.id})">
+                        <div class="item-content">
+                            <div class="item-title">${this.escapeHtml(task.title)}</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="action-btn delete-btn" onclick="planner.deleteDailyTask(${task.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            });
+
+            html += '</div>';
+        }
+
+        container.innerHTML = html;
     }
 
     toggleDailyTaskComplete(id) {
@@ -659,97 +687,120 @@ class AbishuasPlanner {
     }
 
     // Weekly Routines Management
-    addWeeklyRoutine() {
-        const daySelect = document.getElementById('routineDay');
-        const titleInput = document.getElementById('routineTitle');
-        const timeInput = document.getElementById('routineTime');
+    renderWeeklyRoutines() {
+        const container = document.getElementById('weeklyTimetable');
+        if (!container) return;
 
-        const day = daySelect?.value;
-        const title = titleInput?.value.trim();
+        // Generate time slots (6 AM to 10 PM, 30-minute intervals)
+        const timeSlots = [];
+        for (let hour = 6; hour <= 22; hour++) {
+            for (let minute of [0, 30]) {
+                if (hour === 22 && minute === 30) break; // Stop at 10:00 PM
+                const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                timeSlots.push(time24);
+            }
+        }
 
-        if (!day || !title) {
-            this.showNotification('Please select day and enter title', 'warning');
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+        // Create timetable HTML
+        let html = '<div class="timetable">';
+
+        // Header row
+        html += '<div class="timetable-header">Time</div>';
+        days.forEach(day => {
+            html += `<div class="timetable-header">${day.substring(0, 3)}</div>`;
+        });
+
+        // Time slot rows
+        timeSlots.forEach(time => {
+            // Time label
+            html += `<div class="timetable-time">${this.formatTime12Hour(time)}</div>`;
+
+            // Day cells
+            days.forEach(day => {
+                const routine = this.getRoutineForSlot(day, time);
+
+                if (routine) {
+                    html += `
+                        <div class="timetable-cell has-routine" data-day="${day}" data-time="${time}">
+                            <div class="routine-block">
+                                <div class="routine-block-title">${this.escapeHtml(routine.title)}</div>
+                                <button class="routine-block-delete" onclick="planner.deleteWeeklyRoutine('${day}', ${routine.id}); event.stopPropagation();">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="timetable-cell" data-day="${day}" data-time="${time}" onclick="planner.openAddRoutineModal('${day}', '${time}')">
+                            <i class="fas fa-plus timetable-add-hint"></i>
+                        </div>
+                    `;
+                }
+            });
+        });
+
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    getRoutineForSlot(day, time) {
+        const routines = this.weeklyRoutines[day] || [];
+        return routines.find(r => r.time === time);
+    }
+
+    openAddRoutineModal(day, time) {
+        const modal = document.getElementById('addRoutineModal');
+        document.getElementById('routineModalDay').value = day;
+        document.getElementById('routineModalTime').value = time;
+        document.getElementById('routineModalTitle').value = '';
+        document.getElementById('routineModalDuration').value = '30';
+
+        // Display slot info
+        const timeFormatted = this.formatTime12Hour(time);
+        document.getElementById('routineModalSlotInfo').textContent = `${day} at ${timeFormatted}`;
+
+        modal.classList.add('active');
+        document.getElementById('routineModalTitle')?.focus();
+    }
+
+    saveRoutineFromModal() {
+        const day = document.getElementById('routineModalDay').value;
+        const time = document.getElementById('routineModalTime').value;
+        const title = document.getElementById('routineModalTitle').value.trim();
+        const duration = parseInt(document.getElementById('routineModalDuration').value);
+
+        if (!title) {
+            this.showNotification('Please enter a routine title', 'warning');
             return;
         }
 
         const routine = {
             id: Date.now(),
             title,
-            time: timeInput?.value || '',
-            day
+            time,
+            day,
+            duration
         };
 
         // Ensure the day array exists
         if (!this.weeklyRoutines[day]) {
             this.weeklyRoutines[day] = [];
         }
-        this.weeklyRoutines[day].push(routine);
-        this.saveData();
-        this.renderWeeklyRoutines();
 
-        // Clear inputs
-        if (titleInput) titleInput.value = '';
-        if (timeInput) timeInput.value = '';
-
-        // Clear quick-time button selection
-        document.querySelectorAll('.quick-time-btn').forEach(b => b.classList.remove('selected'));
-
-        this.showNotification('Weekly routine added!');
-    }
-
-    renderWeeklyRoutines() {
-        const container = document.getElementById('weeklyRoutinesList');
-        if (!container) return;
-
-        const allRoutines = Object.values(this.weeklyRoutines).flat();
-        if (allRoutines.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-sync-alt"></i>
-                    <h3>No weekly routines</h3>
-                    <p>Add recurring tasks that happen every week!</p>
-                </div>
-            `;
+        // Check if slot is already taken
+        if (this.getRoutineForSlot(day, time)) {
+            this.showNotification('This time slot already has a routine', 'warning');
             return;
         }
 
-        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-        container.innerHTML = `
-            <div class="week-grid">
-                ${days.map(day => {
-                    const routines = this.weeklyRoutines[day] || [];
-                    const routineCount = routines.length;
-
-                    return `
-                        <div class="day-card ${routineCount > 0 ? 'has-routines' : ''}">
-                            <div class="day-card-header">
-                                <div class="day-name">${day}</div>
-                                <div class="day-count">${routineCount} ${routineCount !== 1 ? 'routines' : 'routine'}</div>
-                            </div>
-                            <div class="day-card-content">
-                                ${routineCount === 0 ? `
-                                    <div class="day-empty">
-                                        <i class="fas fa-plus-circle"></i>
-                                        <span>No routines</span>
-                                    </div>
-                                ` : routines.map(routine => `
-                                    <div class="routine-item">
-                                        <div class="routine-info">
-                                            <div class="routine-title">${this.escapeHtml(routine.title)}</div>
-                                            ${routine.time ? `<div class="routine-time"><i class="fas fa-clock"></i> ${this.formatTime12Hour(routine.time)}</div>` : ''}
-                                        </div>
-                                        <button class="routine-delete" onclick="planner.deleteWeeklyRoutine('${day}', ${routine.id})" title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        `;
+        this.weeklyRoutines[day].push(routine);
+        this.saveData();
+        this.renderWeeklyRoutines();
+        this.closeModal();
+        this.showNotification('Routine added successfully!');
     }
 
     async deleteWeeklyRoutine(day, id) {
@@ -990,8 +1041,8 @@ class AbishuasPlanner {
         this.notes = this.notes.filter(n => n.id !== id);
         this.saveData();
         this.renderNotes();
+        this.closeModal(); // Close all modals
         this.showNotification('Note deleted');
-        this.closeNoteModal();
     }
 
     openNoteModal(id) {
