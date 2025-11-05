@@ -718,22 +718,46 @@ class AbishuasPlanner {
 
             // Day cells
             days.forEach(day => {
-                const routine = this.getRoutineForSlot(day, time);
+                const routineInfo = this.getRoutineForSlot(day, time);
 
-                if (routine) {
+                if (routineInfo.routine && routineInfo.isStart) {
+                    // This is the start of a routine - render the full block
+                    const routine = routineInfo.routine;
+                    const duration = routine.duration || 30;
+                    const slots = Math.ceil(duration / 30);
+                    const endTime = this.addMinutesToTime(time, duration);
+                    const color = this.getRoutineColor(duration);
+
                     html += `
-                        <div class="timetable-cell has-routine" data-day="${day}" data-time="${time}">
-                            <div class="routine-block">
-                                <div class="routine-block-title">${this.escapeHtml(routine.title)}</div>
+                        <div class="timetable-cell has-routine routine-start"
+                             data-day="${day}"
+                             data-time="${time}"
+                             data-routine-id="${routine.id}"
+                             style="grid-row: span ${slots};">
+                            <div class="routine-block" style="background: ${color};" onclick="planner.openEditRoutineModal('${day}', ${routine.id}); event.stopPropagation();">
+                                <div class="routine-block-content">
+                                    <div class="routine-block-title">${this.escapeHtml(routine.title)}</div>
+                                    <div class="routine-block-time">${this.formatTime12Hour(time)} - ${this.formatTime12Hour(endTime)}</div>
+                                </div>
                                 <button class="routine-block-delete" onclick="planner.deleteWeeklyRoutine('${day}', ${routine.id}); event.stopPropagation();">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
                         </div>
                     `;
+                } else if (routineInfo.routine && !routineInfo.isStart) {
+                    // This slot is occupied by a routine that started earlier
+                    // Render a placeholder to maintain grid structure, but hide it
+                    html += `<div class="timetable-cell-placeholder" style="display: none;"></div>`;
                 } else {
+                    // Empty slot
                     html += `
-                        <div class="timetable-cell" data-day="${day}" data-time="${time}" onclick="planner.openAddRoutineModal('${day}', '${time}')">
+                        <div class="timetable-cell"
+                             data-day="${day}"
+                             data-time="${time}"
+                             onmousedown="planner.startDragRoutine(event, '${day}', '${time}')"
+                             onmouseenter="planner.dragOverRoutine(event, '${day}', '${time}')"
+                             onclick="planner.openAddRoutineModal('${day}', '${time}')">
                             <i class="fas fa-plus timetable-add-hint"></i>
                         </div>
                     `;
@@ -743,29 +767,227 @@ class AbishuasPlanner {
 
         html += '</div>';
         container.innerHTML = html;
+
+        // Set up mouseup listener for drag-to-create
+        document.addEventListener('mouseup', (e) => this.endDragRoutine(e), { once: true });
     }
 
     getRoutineForSlot(day, time) {
         const routines = this.weeklyRoutines[day] || [];
-        return routines.find(r => r.time === time);
+
+        // Check if any routine covers this time slot
+        for (const routine of routines) {
+            const routineStart = this.timeToMinutes(routine.time);
+            const slotTime = this.timeToMinutes(time);
+            const duration = routine.duration || 30;
+            const routineEnd = routineStart + duration;
+
+            if (slotTime >= routineStart && slotTime < routineEnd) {
+                return {
+                    routine: routine,
+                    isStart: routine.time === time
+                };
+            }
+        }
+
+        return { routine: null, isStart: false };
     }
 
-    openAddRoutineModal(day, time) {
+    // Helper function to convert time string to minutes since midnight
+    timeToMinutes(timeStr) {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes;
+    }
+
+    // Helper function to add minutes to a time string
+    addMinutesToTime(timeStr, minutesToAdd) {
+        const totalMinutes = this.timeToMinutes(timeStr) + minutesToAdd;
+        const hours = Math.floor(totalMinutes / 60) % 24;
+        const minutes = totalMinutes % 60;
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    }
+
+    // Get color based on duration
+    getRoutineColor(duration) {
+        if (duration <= 30) {
+            return 'linear-gradient(135deg, #4a90e2, #5a9de8)'; // Light blue
+        } else if (duration <= 60) {
+            return 'linear-gradient(135deg, #7b68ee, #9370db)'; // Purple
+        } else if (duration <= 90) {
+            return 'linear-gradient(135deg, #ff6b9d, #ff8fb3)'; // Pink
+        } else {
+            return 'linear-gradient(135deg, #f39c12, #f5b041)'; // Orange
+        }
+    }
+
+    // Drag-to-create functionality
+    startDragRoutine(event, day, time) {
+        // Don't prevent default yet - let click events work
+        this.dragState = {
+            isActive: false, // Only activate on actual movement
+            day: day,
+            startTime: time,
+            endTime: time,
+            hasMoved: false
+        };
+        this.dragStartElement = event.currentTarget;
+    }
+
+    dragOverRoutine(event, day, time) {
+        if (!this.dragState) return;
+        if (this.dragState.day !== day) return; // Only allow same-day dragging
+
+        // Activate drag mode if mouse moved to different cell
+        if (time !== this.dragState.startTime && !this.dragState.hasMoved) {
+            this.dragState.isActive = true;
+            this.dragState.hasMoved = true;
+            if (this.dragStartElement) {
+                this.dragStartElement.classList.add('dragging');
+            }
+        }
+
+        if (!this.dragState.isActive) return;
+
+        this.dragState.endTime = time;
+
+        // Visual feedback: highlight dragged cells
+        const cells = document.querySelectorAll(`.timetable-cell[data-day="${day}"]`);
+        const startMinutes = this.timeToMinutes(this.dragState.startTime);
+        const endMinutes = this.timeToMinutes(time);
+        const minTime = Math.min(startMinutes, endMinutes);
+        const maxTime = Math.max(startMinutes, endMinutes);
+
+        cells.forEach(cell => {
+            const cellTime = cell.getAttribute('data-time');
+            if (!cellTime) return;
+            const cellMinutes = this.timeToMinutes(cellTime);
+
+            if (cellMinutes >= minTime && cellMinutes <= maxTime && !cell.classList.contains('has-routine')) {
+                cell.classList.add('drag-preview');
+            } else {
+                cell.classList.remove('drag-preview');
+            }
+        });
+    }
+
+    endDragRoutine(event) {
+        if (!this.dragState) {
+            return;
+        }
+
+        const wasActive = this.dragState.isActive;
+
+        if (wasActive) {
+            const { day, startTime, endTime } = this.dragState;
+            const startMinutes = this.timeToMinutes(startTime);
+            const endMinutes = this.timeToMinutes(endTime);
+
+            // Calculate duration
+            const duration = Math.abs(endMinutes - startMinutes) + 30; // Include the end slot
+            const actualStartTime = startMinutes <= endMinutes ? startTime : endTime;
+
+            // Clear visual feedback
+            document.querySelectorAll('.dragging, .drag-preview').forEach(el => {
+                el.classList.remove('dragging', 'drag-preview');
+            });
+
+            // Reset drag state
+            this.dragState = null;
+            this.dragStartElement = null;
+
+            // If dragged more than one slot, open modal with pre-filled duration
+            if (duration > 30) {
+                this.openAddRoutineModal(day, actualStartTime, duration);
+            }
+        } else {
+            // Just clean up if drag wasn't activated
+            this.dragState = null;
+            this.dragStartElement = null;
+        }
+    }
+
+    openAddRoutineModal(day, time, duration = 30) {
         const modal = document.getElementById('addRoutineModal');
+        document.getElementById('routineModalId').value = '';
         document.getElementById('routineModalDay').value = day;
         document.getElementById('routineModalTime').value = time;
         document.getElementById('routineModalTitle').value = '';
-        document.getElementById('routineModalDuration').value = '30';
+        document.getElementById('routineModalDuration').value = duration.toString();
 
         // Display slot info
         const timeFormatted = this.formatTime12Hour(time);
         document.getElementById('routineModalSlotInfo').textContent = `${day} at ${timeFormatted}`;
 
+        // Update modal title
+        document.querySelector('#addRoutineModal .modal-title').innerHTML = '<i class="fas fa-plus-circle"></i> Add Routine';
+        document.getElementById('saveRoutineModalBtn').innerHTML = '<i class="fas fa-save"></i> Add Routine';
+
+        // Clear conflict warning
+        const conflictWarning = document.getElementById('routineConflictWarning');
+        if (conflictWarning) conflictWarning.style.display = 'none';
+
         modal.classList.add('active');
         document.getElementById('routineModalTitle')?.focus();
     }
 
+    openEditRoutineModal(day, routineId) {
+        const routines = this.weeklyRoutines[day] || [];
+        const routine = routines.find(r => r.id === routineId);
+
+        if (!routine) return;
+
+        const modal = document.getElementById('addRoutineModal');
+        document.getElementById('routineModalId').value = routine.id;
+        document.getElementById('routineModalDay').value = day;
+        document.getElementById('routineModalTime').value = routine.time;
+        document.getElementById('routineModalTitle').value = routine.title;
+        document.getElementById('routineModalDuration').value = (routine.duration || 30).toString();
+
+        // Display slot info
+        const timeFormatted = this.formatTime12Hour(routine.time);
+        document.getElementById('routineModalSlotInfo').textContent = `${day} at ${timeFormatted}`;
+
+        // Update modal title
+        document.querySelector('#addRoutineModal .modal-title').innerHTML = '<i class="fas fa-edit"></i> Edit Routine';
+        document.getElementById('saveRoutineModalBtn').innerHTML = '<i class="fas fa-save"></i> Update Routine';
+
+        // Clear conflict warning
+        const conflictWarning = document.getElementById('routineConflictWarning');
+        if (conflictWarning) conflictWarning.style.display = 'none';
+
+        modal.classList.add('active');
+        document.getElementById('routineModalTitle')?.focus();
+    }
+
+    checkRoutineConflict(day, time, duration, excludeId = null) {
+        const routines = this.weeklyRoutines[day] || [];
+        const newStart = this.timeToMinutes(time);
+        const newEnd = newStart + duration;
+
+        for (const routine of routines) {
+            if (excludeId && routine.id === excludeId) continue;
+
+            const existingStart = this.timeToMinutes(routine.time);
+            const existingEnd = existingStart + (routine.duration || 30);
+
+            // Check for overlap
+            if (
+                (newStart >= existingStart && newStart < existingEnd) ||
+                (newEnd > existingStart && newEnd <= existingEnd) ||
+                (newStart <= existingStart && newEnd >= existingEnd)
+            ) {
+                return {
+                    hasConflict: true,
+                    conflictingRoutine: routine
+                };
+            }
+        }
+
+        return { hasConflict: false };
+    }
+
     saveRoutineFromModal() {
+        const routineId = document.getElementById('routineModalId').value;
         const day = document.getElementById('routineModalDay').value;
         const time = document.getElementById('routineModalTime').value;
         const title = document.getElementById('routineModalTitle').value.trim();
@@ -776,30 +998,62 @@ class AbishuasPlanner {
             return;
         }
 
-        const routine = {
-            id: Date.now(),
-            title,
-            time,
-            day,
-            duration
-        };
-
         // Ensure the day array exists
         if (!this.weeklyRoutines[day]) {
             this.weeklyRoutines[day] = [];
         }
 
-        // Check if slot is already taken
-        if (this.getRoutineForSlot(day, time)) {
-            this.showNotification('This time slot already has a routine', 'warning');
+        // Check for conflicts
+        const excludeId = routineId ? parseInt(routineId) : null;
+        const conflict = this.checkRoutineConflict(day, time, duration, excludeId);
+
+        if (conflict.hasConflict) {
+            const conflictWarning = document.getElementById('routineConflictWarning');
+            if (conflictWarning) {
+                const endTime = this.addMinutesToTime(time, duration);
+                const conflictEndTime = this.addMinutesToTime(conflict.conflictingRoutine.time, conflict.conflictingRoutine.duration || 30);
+                conflictWarning.innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Time Conflict!</strong>
+                    This routine (${this.formatTime12Hour(time)} - ${this.formatTime12Hour(endTime)})
+                    overlaps with "${this.escapeHtml(conflict.conflictingRoutine.title)}"
+                    (${this.formatTime12Hour(conflict.conflictingRoutine.time)} - ${this.formatTime12Hour(conflictEndTime)})
+                `;
+                conflictWarning.style.display = 'block';
+            }
             return;
         }
 
-        this.weeklyRoutines[day].push(routine);
+        if (routineId) {
+            // Edit existing routine
+            const id = parseInt(routineId);
+            const routineIndex = this.weeklyRoutines[day].findIndex(r => r.id === id);
+            if (routineIndex !== -1) {
+                this.weeklyRoutines[day][routineIndex] = {
+                    id,
+                    title,
+                    time,
+                    day,
+                    duration
+                };
+                this.showNotification('Routine updated successfully!');
+            }
+        } else {
+            // Add new routine
+            const routine = {
+                id: Date.now(),
+                title,
+                time,
+                day,
+                duration
+            };
+            this.weeklyRoutines[day].push(routine);
+            this.showNotification('Routine added successfully!');
+        }
+
         this.saveData();
         this.renderWeeklyRoutines();
         this.closeModal();
-        this.showNotification('Routine added successfully!');
     }
 
     async deleteWeeklyRoutine(day, id) {
