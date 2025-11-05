@@ -128,9 +128,18 @@ class AbishuasPlanner {
         document.getElementById('addNoteBtn')?.addEventListener('click', () => this.addNote());
         document.getElementById('editNoteBtn')?.addEventListener('click', () => this.enableNoteEdit());
         document.getElementById('saveNoteBtn')?.addEventListener('click', () => this.saveNoteEdit());
-        document.getElementById('deleteNoteBtn')?.addEventListener('click', () => {
-            const id = parseInt(document.getElementById('viewNoteId').value);
-            this.deleteNote(id);
+        document.getElementById('deleteNoteBtn')?.addEventListener('click', async () => {
+            const idInput = document.getElementById('viewNoteId');
+            if (!idInput || !idInput.value) {
+                this.showNotification('Unable to delete note', 'error');
+                return;
+            }
+            const id = parseInt(idInput.value);
+            if (isNaN(id)) {
+                this.showNotification('Invalid note ID', 'error');
+                return;
+            }
+            await this.deleteNote(id);
         });
 
         // Modal controls
@@ -1039,7 +1048,18 @@ class AbishuasPlanner {
     }
 
     saveNoteEdit() {
-        const id = parseInt(document.getElementById('viewNoteId').value);
+        const idInput = document.getElementById('viewNoteId');
+        if (!idInput || !idInput.value) {
+            this.showNotification('Unable to save note', 'error');
+            return;
+        }
+
+        const id = parseInt(idInput.value);
+        if (isNaN(id)) {
+            this.showNotification('Invalid note ID', 'error');
+            return;
+        }
+
         const title = document.getElementById('viewNoteTitle').value.trim();
         const content = document.getElementById('viewNoteContent').value.trim();
 
@@ -1056,6 +1076,8 @@ class AbishuasPlanner {
             this.renderNotes();
             this.showNotification('Note updated successfully');
             this.closeNoteModal();
+        } else {
+            this.showNotification('Note not found', 'error');
         }
     }
 
