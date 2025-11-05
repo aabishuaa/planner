@@ -355,9 +355,14 @@
                     </h2>
                 </div>
 
-                <p style="color: var(--text-secondary); margin-bottom: 20px;">
-                    Click on any time block to add a routine. Drag to create longer blocks!
-                </p>
+                <div style="color: var(--text-secondary); margin-bottom: 20px; padding: 16px; background: var(--bg-secondary); border-radius: 8px; border-left: 4px solid var(--primary-blue);">
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div><i class="fas fa-mouse-pointer" style="color: var(--primary-blue); width: 20px;"></i> <strong>Click</strong> any time slot to add a routine</div>
+                        <div><i class="fas fa-hand-pointer" style="color: var(--primary-purple); width: 20px;"></i> <strong>Click & Drag</strong> to create multi-hour blocks</div>
+                        <div><i class="fas fa-edit" style="color: var(--primary-blue); width: 20px;"></i> <strong>Click routine</strong> to edit it</div>
+                        <div><i class="fas fa-palette" style="color: var(--primary-purple); width: 20px;"></i> <strong>Colors:</strong> <span style="color: #4a90e2;">●</span> 30min <span style="color: #7b68ee;">●</span> 1hr <span style="color: #ff6b9d;">●</span> 1.5hr <span style="color: #f39c12;">●</span> 2hr+</div>
+                    </div>
+                </div>
 
                 <div id="weeklyTimetable" class="timetable-container"></div>
             </div>
@@ -581,8 +586,11 @@
             </div>
 
             <div class="modal-body">
+                <input type="hidden" id="routineModalId">
                 <input type="hidden" id="routineModalDay">
                 <input type="hidden" id="routineModalTime">
+
+                <div id="routineConflictWarning" class="conflict-warning" style="display: none;"></div>
 
                 <div class="form-group">
                     <label class="form-label">Time Slot</label>
@@ -602,6 +610,8 @@
                         <option value="60">1 hour</option>
                         <option value="90">1.5 hours</option>
                         <option value="120">2 hours</option>
+                        <option value="150">2.5 hours</option>
+                        <option value="180">3 hours</option>
                     </select>
                 </div>
             </div>
