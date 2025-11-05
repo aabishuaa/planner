@@ -985,6 +985,19 @@ body.dark-mode .current-date {
     border-top: 2px solid var(--lavender);
 }
 
+/* Note Modal Specific Styles */
+.note-modal-date {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-top: 16px;
+    padding: 12px;
+    background: rgba(74, 144, 226, 0.05);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 /* Google Calendar Section */
 .google-calendar-section {
     background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(123, 104, 238, 0.1));
@@ -1341,45 +1354,79 @@ body.dark-mode .calendar-legend {
 /* Notes Grid */
 .notes-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    padding: 8px;
 }
 
 .note-card {
-    background: linear-gradient(135deg, rgba(74, 144, 226, 0.05), rgba(123, 104, 238, 0.05));
-    border-radius: var(--border-radius-sm);
-    padding: 20px;
-    transition: var(--transition);
-    border-left: 4px solid var(--primary-blue);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+    height: 280px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Gradient variations for different notes */
+.note-card:nth-child(4n+1) {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.note-card:nth-child(4n+2) {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.note-card:nth-child(4n+3) {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.note-card:nth-child(4n+4) {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
 }
 
 .note-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 8px 16px rgba(0, 0, 0, 0.15);
 }
 
 .note-card-title {
-    font-weight: 600;
-    font-size: 1.1rem;
-    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: #ffffff;
     margin-bottom: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .note-card-content {
     font-size: 0.95rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.95);
     line-height: 1.6;
-    white-space: pre-wrap;
-    word-wrap: break-word;
+    flex: 1;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+    margin-bottom: 12px;
 }
 
 .note-card-date {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin-top: 12px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.85);
     padding-top: 12px;
-    border-top: 1px solid var(--lavender);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .note-card-actions {
@@ -1389,11 +1436,23 @@ body.dark-mode .calendar-legend {
     display: flex;
     gap: 8px;
     opacity: 0;
-    transition: var(--transition);
+    transition: opacity 0.3s ease;
 }
 
 .note-card:hover .note-card-actions {
     opacity: 1;
+}
+
+.note-card-actions .action-btn {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.note-card-actions .action-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
 }
 
 /* Goal Cards */

@@ -126,6 +126,12 @@ class AbishuasPlanner {
 
         // Notes
         document.getElementById('addNoteBtn')?.addEventListener('click', () => this.addNote());
+        document.getElementById('editNoteBtn')?.addEventListener('click', () => this.enableNoteEdit());
+        document.getElementById('saveNoteBtn')?.addEventListener('click', () => this.saveNoteEdit());
+        document.getElementById('deleteNoteBtn')?.addEventListener('click', () => {
+            const id = parseInt(document.getElementById('viewNoteId').value);
+            this.deleteNote(id);
+        });
 
         // Modal controls
         document.querySelectorAll('.modal-close').forEach(btn => {
@@ -956,12 +962,7 @@ class AbishuasPlanner {
             .map(note => {
                 const date = new Date(note.createdAt);
                 return `
-                    <div class="note-card" data-id="${note.id}">
-                        <div class="note-card-actions">
-                            <button class="action-btn delete-btn" onclick="planner.deleteNote(${note.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
+                    <div class="note-card" data-id="${note.id}" onclick="planner.openNoteModal(${note.id})">
                         <div class="note-card-title">${this.escapeHtml(note.title)}</div>
                         <div class="note-card-content">${this.escapeHtml(note.content)}</div>
                         <div class="note-card-date">
@@ -990,6 +991,72 @@ class AbishuasPlanner {
         this.saveData();
         this.renderNotes();
         this.showNotification('Note deleted');
+        this.closeNoteModal();
+    }
+
+    openNoteModal(id) {
+        const note = this.notes.find(n => n.id === id);
+        if (!note) return;
+
+        const modal = document.getElementById('noteModal');
+        document.getElementById('viewNoteId').value = note.id;
+        document.getElementById('viewNoteTitle').value = note.title;
+        document.getElementById('viewNoteContent').value = note.content;
+
+        const date = new Date(note.createdAt);
+        document.getElementById('viewNoteDate').textContent = date.toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+
+        // Set to view mode
+        document.getElementById('viewNoteTitle').readOnly = true;
+        document.getElementById('viewNoteContent').readOnly = true;
+        document.getElementById('noteModalTitle').textContent = 'View Note';
+        document.getElementById('editNoteBtn').style.display = 'inline-flex';
+        document.getElementById('saveNoteBtn').style.display = 'none';
+
+        modal.classList.add('active');
+    }
+
+    closeNoteModal() {
+        const modal = document.getElementById('noteModal');
+        modal.classList.remove('active');
+    }
+
+    enableNoteEdit() {
+        document.getElementById('viewNoteTitle').readOnly = false;
+        document.getElementById('viewNoteContent').readOnly = false;
+        document.getElementById('noteModalTitle').textContent = 'Edit Note';
+        document.getElementById('editNoteBtn').style.display = 'none';
+        document.getElementById('saveNoteBtn').style.display = 'inline-flex';
+
+        // Focus on title field
+        document.getElementById('viewNoteTitle').focus();
+    }
+
+    saveNoteEdit() {
+        const id = parseInt(document.getElementById('viewNoteId').value);
+        const title = document.getElementById('viewNoteTitle').value.trim();
+        const content = document.getElementById('viewNoteContent').value.trim();
+
+        if (!title || !content) {
+            this.showNotification('Please fill in both title and content', 'error');
+            return;
+        }
+
+        const note = this.notes.find(n => n.id === id);
+        if (note) {
+            note.title = title;
+            note.content = content;
+            this.saveData();
+            this.renderNotes();
+            this.showNotification('Note updated successfully');
+            this.closeNoteModal();
+        }
     }
 
     // Deadline Management
